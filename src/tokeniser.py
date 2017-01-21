@@ -9,6 +9,8 @@ class Tokeniser(object):
         self.errors = errors
         self.state = token_state.DATA
         self.tag_pending = token.Token()
+        self.comment_pending = token.CommentToken()
+        self.doctype_pending = token.DoctypeToken()
         self.script_buffer = ''
 
     def move_to_state(self, state):
@@ -30,10 +32,22 @@ class Tokeniser(object):
     def emit_tag_pending(self):
         pass
 
+    def emit_comment_pending(self):
+        pass
+
+    def emit_doctype_pending(self):
+        pass
+
     def consume_char_ref(self, additional_char, in_attr):
         pass
 
     def create_tag_pending(self, bool=False):
+        pass
+
+    def create_comment_pending(self):
+        pass
+
+    def create_doctype_pending(self):
         pass
 
     def approptiate_end_tag_token(self):

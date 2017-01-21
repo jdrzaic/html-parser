@@ -33,6 +33,9 @@ class Reader(object):
     def consume_tag_name(self):
         pass
 
+    def consume_seq(self):
+        pass
+
     def unconsume(self):
         pass
 
@@ -40,4 +43,10 @@ class Reader(object):
         pass
 
     def match(self, char):
+        pass
+
+    def match_seq(self, seq):
+        pass
+
+    def match_seq_ic(self, seq):
         pass

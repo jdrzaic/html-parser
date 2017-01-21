@@ -206,11 +206,28 @@ class ScriptDataLessThanSignState(State):
 
 
 class MarkupDeclOpenState(State):
-    pass
+    def read(self, reader, tokeniser):
+        if reader.match_seq("--"):
+            tokeniser.create_comment_pending()
+            tokeniser.move(COMMENT_START)
+        elif reader.match_seq_ic("DOCTYPE"):
+            tokeniser.move(DOCTYPE)
+        # TODO
+        #elif reader.match_seq("[CDATA["):
+        #    tokeniser.move(CDATA_SECTION)
+        else:
+            tokeniser.error("MarkupDeclOpenState")
+            tokeniser.move_to_state(BOGUS_COMMENT)
 
 
 class BogusCommentState(State):
-    pass
+    def read(self, reader, tokeniser):
+        reader.unconsume()
+        comment_token = token.CommentToken()
+        comment_token.data += reader.consume_to(">")
+        comment_token.bogus = True
+        tokeniser.emit(comment_token)
+        tokeniser.move_to_state(DATA)
 
 
 class TagNameState(State):
@@ -235,7 +252,7 @@ class BeforeAttrNameState(State):
     def read(self, reader, tokeniser):
         read_c = reader.consume()
         if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f'or read_c == " ":
-            pass
+            return
         elif read_c == "/":
             tokeniser.move(SELF_CLOSING_START_TAG)
         elif read_c == ">":
@@ -260,12 +277,204 @@ class BeforeAttrNameState(State):
             tokeniser.move(ATTRIBUTE_NAME)
 
 
-class AttributeNameState(State):
-    pass
+class AttrNameState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f'or read_c == " ":
+            tokeniser.move(AFTER_ATTR_NAME)
+        elif read_c == "/":
+            tokeniser.move(SELF_CLOSING_START_TAG)
+        elif read_c == "=":
+            tokeniser.move(BEFORE_ATTR_VALUE)
+        elif read_c == ">":
+            tokeniser.emit_tag_pending()
+            tokeniser.move(DATA)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("AttrNameState")
+            tokeniser.tag_pending.append_attr_name(REPLACE_CHAR)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("AttrNameState")
+            tokeniser.move(DATA)
+        elif read_c == '"' or read_c == "'" or read_c == "<":
+            tokeniser.error("AttrNameState")
+            tokeniser.tag_pending.append_attr_name(read_c)
+
+
+class AfterAttrNameState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f'or read_c == " ":
+            return
+        elif read_c == "/":
+            tokeniser.move(SELF_CLOSING_START_TAG)
+        elif read_c == "=":
+            tokeniser.move(BEFORE_ATTR_VALUE)
+        elif read_c == ">":
+            tokeniser.emit_tag_pending()
+            tokeniser.move(DATA)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("AfterAttrNameState")
+            tokeniser.tag_pending.append_attr_name(REPLACE_CHAR)
+            tokeniser.move(ATTRIBUTE_NAME)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("AfterAttrNameState")
+            tokeniser.move(DATA)
+        elif read_c == '"' or read_c == "'" or read_c == "<":
+            tokeniser.error("AfterAttrNameState")
+            tokeniser.tag_pending.new_attribute()
+            tokeniser.tag_pending.append_attr_name(read_c)
+            token.move(ATTRIBUTE_NAME)
+        else:
+            tokeniser.tag_pending.new_attribute()
+            reader.unconsume()
+            tokeniser.move(ATTRIBUTE_NAME)
+
+
+class BeforeAttrValueState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            return
+        elif read_c == '"':
+            tokeniser.move(ATTRIBUTE_VALUE_DOUBLE_QUOTED)
+        elif read_c == "&":
+            reader.unconsume()
+            tokeniser.move(ATTRIBUTE_VALUE_UNQUOTED)
+        elif read_c == "'":
+            tokeniser.move(ATTRIBUTE_VALUE_SINGLE_QUOTED)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("BeforeAttributeValue")
+            tokeniser.tag_pending.append_attr_value(REPLACE_CHAR)
+            tokeniser.move(ATTRIBUTE_VALUE_UNQUOTED)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("BeforeAttributeValue")
+            tokeniser.emit_tag_pending()
+            tokeniser.move(DATA)
+        elif read_c == ">":
+            tokeniser.error("BeforeAttributeValue")
+            tokeniser.emit_tag_pending()
+            tokeniser.move(DATA)
+        elif read_c == "<" or read_c == "=":
+            tokeniser.error("BeforeAttributeValue")
+            tokeniser.tag_pending.append_attr_value(read_c)
+            tokeniser.move(ATTRIBUTE_VALUE_UNQUOTED)
+        else:
+            reader.unconsume()
+            tokeniser.move(ATTRIBUTE_VALUE_UNQUOTED)
+
+
+class AttrValueUnquotedState(State):
+    def read(self, reader, tokeniser):
+        data = reader.consume_to_any_of(
+            '\t', '\n', '\r', '\f', ' ', '&', '>', NULL_CHAR, '"', '\'', '<', '=', '`')
+        if data:
+            tokeniser.tag_pending.append_attr_value(data)
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            tokeniser.move(BEFORE_ATTR_NAME)
+        elif read_c == "&":
+            ref = tokeniser.consume_char_ref(">", True)
+            if ref:
+                tokeniser.tag_pending.append_attr_value(ref)
+            else:
+                tokeniser.tag_pending.append_attr_value("&")
+        elif read_c == ">":
+            tokeniser.emit_tag_pending()
+            tokeniser.move(DATA)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("AttrValueUnqoutedState")
+            tokeniser.tag_pending.append_attr_value(REPLACE_CHAR)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("AttrValueUnqoutedState")
+            tokeniser.move(DATA)
+        elif read_c == '"' or read_c == "'" or read_c == "<" or read_c == "=" or read_c == '`':
+            tokeniser.error("AttrValueUnqoutedState")
+            tokeniser.tag_pending.append_attr_value(read_c)
+
+
+
+class AttrValueSingleQuotedState(State):
+    def read(self, reader, tokeniser):
+        data = reader.consume_to_any_of('\'', '&', NULL_CHAR)
+        if data:
+            tokeniser.tag_pending.append_attr_value(data)
+        else:
+            tokeniser.tag_pending.set_empty_attr_value()
+        read_c = reader.consume()
+        if read_c == "'":
+            tokeniser.move(AFTER_ATTR_VALUE_QUOTED)
+        elif read_c == "&":
+            ref = tokeniser.consume_char_ref("'", True)
+            if ref:
+                tokeniser.tag_pending.append_attr_value(ref)
+            else:
+                tokeniser.tag_pending.append_attr_value("&")
+        elif read_c == NULL_CHAR:
+            tokeniser.error("AttrValueSingleQuotedState")
+            tokeniser.tag_pending.append_attr_value(REPLACE_CHAR)
+        elif reader.EOF:
+            tokeniser.eof_error("AttrValueSingleQuotedState")
+            tokeniser.move(DATA)
+
+
+class AttrValueDoubleQuotedState(State):
+    def read(self, reader, tokeniser):
+        data = reader.consume_to_any_of('"', '&', NULL_CHAR)
+        if data:
+            tokeniser.tag_pending.append_attr_value(data)
+        else:
+            tokeniser.tag_pending.set_empty_attr_value()
+        read_c = reader.consume()
+        if read_c == '"':
+            tokeniser.move(AFTER_ATTR_VALUE_QUOTED)
+        elif read_c == "&":
+            ref = tokeniser.consume_char_ref('"', True)
+            if ref:
+                tokeniser.tag_pending.append_attr_value(ref)
+            else:
+                tokeniser.tag_pending.append_attr_value("&")
+        elif read_c == NULL_CHAR:
+            tokeniser.error("AttrValueDoubleQuotedState")
+            tokeniser.tag_pending.append_attr_value(REPLACE_CHAR)
+        elif reader.EOF:
+            tokeniser.eof_error("AttrValueDoubleQuotedState")
+            tokeniser.move(DATA)
+
+
+class AfterAttrValueQuotedState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            tokeniser.move(BEFORE_ATTR_NAME)
+        elif read_c == "/":
+            tokeniser.move(SELF_CLOSING_START_TAG)
+        elif read_c == ">":
+            tokeniser.emit_tag_pending()
+            tokeniser.move(DATA)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("AfterAttrValueQuotedState")
+            tokeniser.move(DATA)
+        else:
+            tokeniser.error("AfterAttrValueQuotedState")
+            reader.unconsume()
+            tokeniser.move(BEFORE_ATTR_NAME)
+
 
 
 class SelfClosingStartTagState(State):
-    pass
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == ">":
+            tokeniser.tag_pending.is_self_closing = True
+            tokeniser.emit_tag_pending()
+            tokeniser.move(DATA)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("SelfClosingStartTagState")
+            tokeniser.move(DATA)
+        else:
+            tokeniser.error("SelfClosingStartTagState")
+            reader.unconsume()
+            tokeniser.move(BEFORE_ATTR_NAME)
 
 
 class RawTextEndTagOpenState(State):
@@ -646,6 +855,202 @@ class ScriptDataDoubleEscapeEndState(State):
             tokeniser.move(SCRIPT_DATA_DOUBLE_ESCAPED)
 
 
+class CommentStartState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == "-":
+            tokeniser.move(COMMENT_START_DASH)
+        elif read_c == ">":
+            tokeniser.error("CommentStartState")
+            tokeniser.emit_comment_pending()
+            tokeniser.move(DATA)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("CommentStartState")
+            tokeniser.comment_pending.data += REPLACE_CHAR
+            tokeniser.move(COMMENT)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("CommentStartState")
+            tokeniser.emit_comment_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.comment_pending.data += read_c
+            tokeniser.move(COMMENT)
+
+
+class DoctypeState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            tokeniser.move(BEFORE_DOCTYPE_NAME)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("DoctypeState")
+        elif read_c == ">":
+            tokeniser.error("DoctypeState")
+            tokeniser.create_doctype_pending()
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.error("DoctypeState")
+            tokeniser.move(BEFORE_DOCTYPE_NAME)
+
+
+class CommentStartDashState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == "-":
+            tokeniser.move(COMMENT_START_DASH)
+        elif read_c == ">":
+            tokeniser.error("CommentStartDashState")
+            tokeniser.emit_comment_pending()
+            tokeniser.move(DATA)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("CommentStartState")
+            tokeniser.comment_pending.data += REPLACE_CHAR
+            tokeniser.move(COMMENT)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("CommentStartDashState")
+            tokeniser.emit_comment_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.comment_pending.data += read_c
+            tokeniser.move(COMMENT)
+
+
+class CommentState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == "-":
+            tokeniser.move(COMMENT_END_DASH)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("CommentState")
+            tokeniser.comment_pending.data += REPLACE_CHAR
+            reader.advance()
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("CommentState")
+            tokeniser.emit_comment_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.comment_pending.data += reader.consume_to_any_of('-', NULL_CHAR)
+
+
+class CommentEndDashState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == "-":
+            tokeniser.move(COMMENT_END)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("CommentEndDashState")
+            tokeniser.comment_pending.data += REPLACE_CHAR
+            reader.advance()
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("CommentEndDashState")
+            tokeniser.emit_comment_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.comment_pending.data += '-' + read_c
+            tokeniser.move(COMMENT)
+
+
+class CommentEndState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == ">":
+            tokeniser.emit_comment_pending()
+            tokeniser.move(DATA)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("CommentEndState")
+            tokeniser.comment_pending.data += "--" + REPLACE_CHAR
+            tokeniser.move(COMMENT)
+        elif read_c == "!":
+            tokeniser.error("CommentEndState")
+            tokeniser.move(COMMENT_END_BANG)
+        elif read_c == "-":
+            tokeniser.error("CommentEndState")
+            tokeniser.comment_pending.data += "-"
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("CommentEndState")
+            tokeniser.emit_comment_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.error("CommentEndState")
+            tokeniser.comment_pending.data += "--" + read_c
+            tokeniser.move(COMMENT)
+
+
+class CommentEndBangState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == ">":
+            tokeniser.emit_comment_pending()
+            tokeniser.move(DATA)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("CommentEndBangState")
+            tokeniser.comment_pending.data += "--!" + REPLACE_CHAR
+            tokeniser.move(COMMENT)
+        elif read_c == "-":
+            tokeniser.comment_pending.data += "--!"
+            tokeniser.move(COMMENT_END_DASH)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("CommentEndBangState")
+            tokeniser.emit_comment_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.error("CommentEndBangState")
+            tokeniser.comment_pending.data += "--!" + read_c
+            tokeniser.move(COMMENT)
+
+
+class BeforeDoctypeNameState(State):
+    def read(self, reader, tokeniser):
+        if reader.match_letter():
+            tokeniser.create_doctype_pending()
+            tokeniser.move(DOCTYPE_NAME)
+            return
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            pass
+        elif read_c == NULL_CHAR:
+            tokeniser.error("BeforeDoctypeState")
+            tokeniser.create_doctype_pending()
+            tokeniser.doctype_pending.name += REPLACE_CHAR
+            tokeniser.move(DOCTYPE_NAME)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("BeforeDoctypeState")
+            tokeniser.create_doctype_pending()
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.create_doctype_pending()
+            tokeniser.doctype_pending.name += read_c
+
+
+class DoctypeNameState(State):
+    def read(self, reader, tokeniser):
+        if reader.match_letter():
+            name = reader.consume_seq()
+            tokeniser.doctype_pending.name += name
+            return
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            pass
+        elif read_c == NULL_CHAR:
+            tokeniser.error("BeforeDoctypeState")
+            tokeniser.create_doctype_pending()
+            tokeniser.doctype_pending.name += REPLACE_CHAR
+            tokeniser.move(DOCTYPE_NAME)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("BeforeDoctypeState")
+            tokeniser.create_doctype_pending()
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.create_doctype_pending()
+            tokeniser.doctype_pending.name += read_c
+
+
 DATA = DataState()
 CHAR_REF_IN_DATA = CharRefInDataState()
 CHAR_REF_IN_RCDATA = CharRefInRcDataState()
@@ -682,4 +1087,19 @@ SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN = ScriptDataDoubleEscapedLessThanSignS
 SCRIPT_DATA_DOUBLE_ESCAPED = ScriptDataDoubleEscapedState()
 SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH = ScriptDataDoubleEscapedDashDashState()
 SCRIPT_DATA_DOUBLE_ESCAPE_END = ScriptDataDoubleEscapeEndState()
-ATTRIBUTE_NAME = AttributeNameState()
+ATTRIBUTE_NAME = AttrNameState()
+AFTER_ATTR_NAME = AfterAttrNameState()
+BEFORE_ATTR_VALUE = BeforeAttrValueState()
+ATTRIBUTE_VALUE_UNQUOTED = AttrValueUnquotedState()
+ATTRIBUTE_VALUE_SINGLE_QUOTED = AttrValueSingleQuotedState()
+ATTRIBUTE_VALUE_DOUBLE_QUOTED = AttrValueDoubleQuotedState()
+AFTER_ATTR_VALUE_QUOTED = AfterAttrValueQuotedState()
+COMMENT_START = CommentStartState()
+DOCTYPE = DoctypeState()
+COMMENT_START_DASH = CommentStartDashState()
+COMMENT = CommentState()
+COMMENT_END_DASH = CommentEndDashState()
+COMMENT_END = CommentEndState()
+COMMENT_END_BANG = CommentEndBangState()
+BEFORE_DOCTYPE_NAME = BeforeDoctypeNameState()
+DOCTYPE_NAME = DoctypeNameState()
