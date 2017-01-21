@@ -1,6 +1,6 @@
 from abc import ABCMeta
 import token
-
+import node
 
 NULL_CHAR = '\u0000'
 REPLACE_CHAR = '\uFFFD'
@@ -1034,21 +1034,86 @@ class DoctypeNameState(State):
             return
         read_c = reader.consume()
         if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
-            pass
+            tokeniser.move(AFTER_DOCTYPE_NAME)
+        elif read_c == ">":
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
         elif read_c == NULL_CHAR:
-            tokeniser.error("BeforeDoctypeState")
-            tokeniser.create_doctype_pending()
+            tokeniser.error("DoctypeNameState")
             tokeniser.doctype_pending.name += REPLACE_CHAR
-            tokeniser.move(DOCTYPE_NAME)
         elif read_c == reader.EOF:
-            tokeniser.eof_error("BeforeDoctypeState")
+            tokeniser.eof_error("DoctypeNameState")
             tokeniser.create_doctype_pending()
             tokeniser.doctype_pending.force_quirks = True
             tokeniser.emit_doctype_pending()
             tokeniser.move(DATA)
         else:
-            tokeniser.create_doctype_pending()
             tokeniser.doctype_pending.name += read_c
+
+
+class AfterDoctypeNameState(State):
+    def read(self, reader, tokeniser):
+        if reader.empty():
+            tokeniser.eof_error("AfterDoctypeNameState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+            return
+        if reader.match_any_of('\t', '\n', '\r', '\f', ' '):
+            reader.advance()
+        elif reader.match('>'):
+            tokeniser.emit_doctype_pending()
+            tokeniser.move_to_state(DATA)
+        elif reader.match_seq_ic("PUBLIC"):
+            tokeniser.doctype_pending.pub_sys = "PUBLIC"
+            tokeniser.move(AFTER_DOCTYPE_PUBLIC_KEY)
+        elif reader.match_seq_ic("SYSTEM"):
+            tokeniser.doctype_pending.pub_sys = "SYSTEM"
+            tokeniser.move(AFTER_DOCTYPE_SYSTEM_KEY)
+        else:
+            tokeniser.error("AfterDoctypeNameState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.move_to_state(BOGUS_DOCTYPE)
+
+
+class AfterDoctypePublicKeyState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            tokeniser.move(BEFORE_DOCTYPE_PUBLIC_ID)
+        elif read_c == '"':
+            tokeniser.error("AfterDoctypePublicState")
+            tokeniser.move(DOCTYPE_PUBLIC_ID_DOUBLE_QUOTED)
+        elif read_c == "'":
+            tokeniser.error("AfterDoctypePublicState")
+            tokeniser.move(DOCTYPE_PUBLIC_ID_SINGLE_QUOTED)
+        elif read_c == ">":
+            tokeniser.error("AfterDoctypePublicState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("AfterDoctypePublicState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.error("AfterDoctypePublicState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(BOGUS_DOCTYPE)
+
+
+class AfterDoctypeSystemKeyState(State):
+    pass
+
+
+class BogusDoctypeState(State):
+    pass
+
+
+class BeforeDoctypePublicIdState(State):
+    
 
 
 DATA = DataState()
@@ -1103,3 +1168,8 @@ COMMENT_END = CommentEndState()
 COMMENT_END_BANG = CommentEndBangState()
 BEFORE_DOCTYPE_NAME = BeforeDoctypeNameState()
 DOCTYPE_NAME = DoctypeNameState()
+AFTER_DOCTYPE_NAME = AfterDoctypeNameState()
+AFTER_DOCTYPE_PUBLIC_KEY = AfterDoctypePublicKeyState()
+AFTER_DOCTYPE_SYSTEM_KEY = AfterDoctypeSystemKeyState()
+BOGUS_DOCTYPE = BogusDoctypeState()
+BEFORE_DOCTYPE_PUBLIC_ID = BeforeDoctypePublicIdState()
