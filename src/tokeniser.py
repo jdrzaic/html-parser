@@ -38,3 +38,6 @@ class Tokeniser(object):
 
     def approptiate_end_tag_token(self):
         pass
+
+    def approptiate_end_tag_name(self):
+        pass

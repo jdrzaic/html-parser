@@ -35,3 +35,9 @@ class Reader(object):
 
     def unconsume(self):
         pass
+
+    def match_letter(self):
+        pass
+
+    def match(self, char):
+        pass
