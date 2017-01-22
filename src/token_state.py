@@ -64,7 +64,7 @@ class CharRefInRcDataState(State):
         if not cs:
             tokeniser.emit("&")
         else:
-            tokeniser.emit(cs)  # TODO check for emit type
+            tokeniser.emit(cs)
         tokeniser.move_to_state(RCDATA)
 
 

@@ -42,6 +42,12 @@ class BoolAttribute(Attribute):
     def __init__(self, key):
         super(BoolAttribute, self).__init__(key, "")
 
+    def get_html(self):
+        return self.key
+
+    def __str__(self):
+        return self.key
+
 
 class Attributes(object):
 

@@ -128,3 +128,6 @@ class Reader(object):
         except:
             return False
 
+    def consume_letter_and_digit_seq(self):
+        pass
+

@@ -26,6 +26,7 @@ class Tokeniser(object):
         self.self_closing_acknow = True
         while not self.is_emit_pending:
             self.state.read(self.reader, self)
+            print self.state
         if self.chars_string:
             str = self.chars_string
             self.chars_string = ""
