@@ -1,4 +1,10 @@
 import tree_builder
+import html_tag
+
+
+# fill with existing html tags
+html_tag.initialize_tags()
+
 
 builder = tree_builder.TreeBuilder("www.index.com", """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 

@@ -1,4 +1,5 @@
 import token_state
+import re
 
 
 class Reader(object):
@@ -131,3 +132,13 @@ class Reader(object):
     def consume_letter_and_digit_seq(self):
         pass
 
+
+class OutputPrinter(object):
+
+    def indent(self, data, depth):
+        pass
+
+    @classmethod
+    def normalize_whitespace(cls, str):
+        normalized = re.sub('\s+|\t+|\n+|\f+|[ ]+', " ", str)
+        return normalized

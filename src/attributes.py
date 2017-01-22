@@ -1,3 +1,6 @@
+import character_entities as ce
+
+
 BOOLEAN_ATTRS = ["allowfullscreen", "async", "autofocus", "checked", "compact", "declare",
                  "default", "defer", "disabled", "formnovalidate", "hidden", "inert", "ismap",
                  "itemscope", "multiple", "muted", "nohref", "noresize", "noshade",
@@ -35,6 +38,13 @@ class Attribute(object):
 
     def __str__(self):
         return self.get_html()
+
+    def create_from_encoded(self, unencoded_key, encoded_value):
+        val = ce.Entities.unescape(encoded_value)
+        return Attribute(unencoded_key, val)
+
+    def is_bool_attr(self):
+        return self.key in BOOLEAN_ATTRS
 
 
 class BoolAttribute(Attribute):
