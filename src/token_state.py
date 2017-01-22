@@ -24,17 +24,17 @@ class DataState(State):
             tokeniser.error("DataState")
             tokeniser.emit(reader.consume())
         elif read_c == reader.EOF:
-            tokeniser.emit(token.EOFToken())
+            tokeniser.emit_token(token.EOFToken())
         else:
             data = reader.consume_data()
-            tokeniser.emit(data)
+            tokeniser.emit_string(data)
 
 
 class CharRefInDataState(State):
     def read(self, reader, tokeniser):
         cs = tokeniser.consume_char_ref(None, False)
         if not cs:
-            tokeniser.emit("&")
+            tokeniser.emit("&")  # TODO
         else:
             tokeniser.emit(cs)
         tokeniser.move_to_state(DATA)
@@ -52,10 +52,10 @@ class RcDataState(State):
             reader.advance()
             tokeniser.emit(REPLACE_CHAR)
         elif read_c == reader.EOF:
-            tokeniser.emit(token.EOFToken())
+            tokeniser.emit_token(token.EOFToken())
         else:
             data = reader.consume_to_any_of('&', '<', NULL_CHAR)
-            tokeniser.emit(data)
+            tokeniser.emit_string(data)
 
 
 class CharRefInRcDataState(State):
@@ -64,7 +64,7 @@ class CharRefInRcDataState(State):
         if not cs:
             tokeniser.emit("&")
         else:
-            tokeniser.emit(cs)
+            tokeniser.emit(cs)  # TODO check for emit type
         tokeniser.move_to_state(RCDATA)
 
 
@@ -82,7 +82,7 @@ class RawtextState(State):
             tokeniser.emit(token.EOFToken())
         else:
             data = reader.consume_to_any_of('<', NULL_CHAR)
-            tokeniser.emit(data)
+            tokeniser.emit_string(data)
 
 
 class ScriptDataState(State):
@@ -96,10 +96,10 @@ class ScriptDataState(State):
             tokeniser.emit(REPLACE_CHAR)
 
         elif read_c == reader.EOF:
-            tokeniser.emit(token.EOFToken())
+            tokeniser.emit_token(token.EOFToken())
         else:
             data = reader.consume_to_any_of('<', NULL_CHAR)
-            tokeniser.emit(data)
+            tokeniser.emit_string(data)
 
 
 class PlaintextState(State):
@@ -110,10 +110,10 @@ class PlaintextState(State):
             reader.advance()
             tokeniser.emit(REPLACE_CHAR)
         elif read_c == reader.EOF:
-            tokeniser.emit(token.EOFToken())
+            tokeniser.emit_token(token.EOFToken())
         else:
             data = reader.consume_to(NULL_CHAR)
-            tokeniser.emit(data)
+            tokeniser.emit_string(data)
 
 
 class TagOpenState(State):
@@ -139,7 +139,7 @@ class EndTagOpenState(State):
     def read(self, reader, tokeniser):
         if reader.empty():
             tokeniser.eof_error("EndTagOpenState")
-            tokeniser.emit("</")
+            tokeniser.emit_string("</")
             tokeniser.move(DATA)
         elif reader.match_letter():
             tokeniser.create_tag_pending()
@@ -176,7 +176,7 @@ class RcDataEndTagOpenState(State):
             tokeniser.script_buffer += reader.current()
             tokeniser.move_to_state(RCDATA_END_TAG_NAME)
         else:
-            tokeniser.emit("</")
+            tokeniser.emit_string("</")
             tokeniser.move(RCDATA)
 
 
@@ -197,7 +197,7 @@ class ScriptDataLessThanSignState(State):
             tokeniser.script_buffer = ''
             tokeniser.move(SCRIPT_DATA_END_TAG_OPEN)
         elif read_c == "!":
-            tokeniser.emit("<!")
+            tokeniser.emit_string("<!")
             tokeniser.move(SCRIPT_DATA_ESCAPE_START)
         else:
             tokeniser.emit("<")
@@ -207,7 +207,7 @@ class ScriptDataLessThanSignState(State):
 
 class MarkupDeclOpenState(State):
     def read(self, reader, tokeniser):
-        if reader.match_seq("--"):
+        if reader.match_seq_consume("--"):
             tokeniser.create_comment_pending()
             tokeniser.move(COMMENT_START)
         elif reader.match_seq_ic("DOCTYPE"):
@@ -226,7 +226,7 @@ class BogusCommentState(State):
         comment_token = token.CommentToken()
         comment_token.data += reader.consume_to(">")
         comment_token.bogus = True
-        tokeniser.emit(comment_token)
+        tokeniser.emit_token(comment_token)
         tokeniser.move_to_state(DATA)
 
 
@@ -483,7 +483,7 @@ class RawTextEndTagOpenState(State):
             tokeniser.create_tag_pending()
             tokeniser.move(RAWTEXT_END_TAG_NAME)
         else:
-            tokeniser.emit("</")
+            tokeniser.emit_string("</")
             tokeniser.move(RAWTEXT)
 
 
@@ -499,14 +499,14 @@ class RcDataEndTagNameState(State):
             if tokeniser.approptiate_end_tag_token():
                 tokeniser.move(BEFORE_ATTR_NAME)
             else:
-                tokeniser.emit("</" + tokeniser.script_buffer)
+                tokeniser.emit_string("</" + tokeniser.script_buffer)
                 reader.unconsume()
                 tokeniser.move(RCDATA)
         elif read_c == "/":
             if tokeniser.approptiate_end_tag_token():
                 tokeniser.move(SELF_CLOSING_START_TAG)
             else:
-                tokeniser.emit("</" + tokeniser.script_buffer)
+                tokeniser.emit_string("</" + tokeniser.script_buffer)
                 reader.unconsume()
                 tokeniser.move(RCDATA)
         elif read_c == ">":
@@ -514,11 +514,11 @@ class RcDataEndTagNameState(State):
                 tokeniser.emit_tag_pending()
                 tokeniser.move(DATA)
             else:
-                tokeniser.emit("</" + tokeniser.script_buffer)
+                tokeniser.emit_string("</" + tokeniser.script_buffer)
                 reader.unconsume()
                 tokeniser.move(RCDATA)
         else:
-            tokeniser.emit("</" + tokeniser.script_buffer)
+            tokeniser.emit_string("</" + tokeniser.script_buffer)
             reader.unconsume()
             tokeniser.move(RCDATA)
 
@@ -546,7 +546,7 @@ class RawtextEndTagNameState(State):
         else:
             needs_exit_tran = True
         if needs_exit_tran:
-            tokeniser.emit("</" + tokeniser.script_buffer)
+            tokeniser.emit_string("</" + tokeniser.script_buffer)
             tokeniser.move(RAWTEXT)
 
 
@@ -556,7 +556,7 @@ class ScriptDataEndTagOpenState(State):
             tokeniser.create_tag_pending()
             tokeniser.move(SCRIPT_DATA_END_TAG_NAME)
         else:
-            tokeniser.emit("</")
+            tokeniser.emit_string("</")
             tokeniser.move(SCRIPT_DATA)
 
 
@@ -582,7 +582,7 @@ class ScriptDataEndTagNameState(State):
         else:
             needs_exit_tran = True
         if needs_exit_tran:
-            tokeniser.emit("</" + tokeniser.script_buffer)
+            tokeniser.emit_string("</" + tokeniser.script_buffer)
             tokeniser.move(SCRIPT_DATA)
 
 
@@ -622,7 +622,7 @@ class ScriptDataEscapedState(State):
             tokeniser.emit(REPLACE_CHAR)
         else:
             data = reader.consume_to_any_of('-', '<', NULL_CHAR)
-            tokeniser.emit(data)
+            tokeniser.emit_string(data)
 
 
 class ScriptDataEscapedDashState(State):
@@ -643,7 +643,7 @@ class ScriptDataEscapedDashState(State):
             tokeniser.emit(REPLACE_CHAR)
         else:
             data = reader.consume_to_any_of('-', '<', NULL_CHAR)
-            tokeniser.emit(data)
+            tokeniser.emit_string(data)
 
 
 class ScriptDataEscapedLessThanSignState(State):
@@ -651,7 +651,7 @@ class ScriptDataEscapedLessThanSignState(State):
         if reader.match_letter():
             tokeniser.script_buffer = ''
             tokeniser.script_buffer += reader.current()
-            tokeniser.emit("<" + reader.current())
+            tokeniser.emit_string("<" + reader.current())
             tokeniser.move_to_state(SCRIPT_DATA_DOUBLE_ESCAPE_START)
         elif reader.match("/"):
             tokeniser.script_buffer = ''
@@ -715,7 +715,7 @@ class ScriptDataEscapedEndTagNameState(State):
         else:
             needs_exit_tran = True
         if needs_exit_tran:
-            tokeniser.emit("</" + tokeniser.script_buffer)
+            tokeniser.emit_string("</" + tokeniser.script_buffer)
             tokeniser.move(SCRIPT_DATA_ESCAPED)
 
 
@@ -725,7 +725,7 @@ class ScriptDataDoubleEscapeStartState(State):
         if reader.match_letter():
             name = reader.consume_word()
             tokeniser.script_buffer += name
-            tokeniser.emit(name)
+            tokeniser.emit_string(name)
             return
         read_c = reader.consume()
         if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " " or read_c == "/" or read_c == ">":
@@ -758,7 +758,7 @@ class ScriptDataDoubleEscapedState(State):
             tokeniser.move(DATA)
         else:
             data = reader.consume_to_any_of('-', '<', NULL_CHAR)
-            tokeniser.emit(data)
+            tokeniser.emit_string(data)
 
 
 class ScriptDataDoubleEscapedLessThanSignState(State):
@@ -776,14 +776,14 @@ class ScriptDataDoubleEscapedDashState(State):
         read_c = reader.current()
         if read_c == "-":
             tokeniser.emit(read_c)
-            tokeniser.move_to_state(SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH)
+            tokeniser.move(SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH)
         elif read_c == "<":
             tokeniser.emit(read_c)
-            tokeniser.move_to_state(SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN)
+            tokeniser.move(SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN)
         elif read_c == NULL_CHAR:
             tokeniser.error("ScriptDataDoubleEscapedDashState")
             tokeniser.emit(REPLACE_CHAR)
-            tokeniser.emit(SCRIPT_DATA_DOUBLE_ESCAPED)
+            tokeniser.move(SCRIPT_DATA_DOUBLE_ESCAPED)
         elif read_c == reader.EOF:
             tokeniser.eof_error("ScriptDataDoubleEscapedDashState")
             tokeniser.move(DATA)
@@ -792,7 +792,7 @@ class ScriptDataDoubleEscapedDashState(State):
             tokeniser.move(SCRIPT_DATA_DOUBLE_ESCAPED)
 
 
-class ScriptDataDoubleEscapedState(State):
+"""class ScriptDataDoubleEscapedState(State):
     def read(self, reader, tokeniser):
         read_c = reader.current()
         if read_c == "-":
@@ -810,7 +810,7 @@ class ScriptDataDoubleEscapedState(State):
             tokeniser.move(DATA)
         else:
             data = reader.consume_to_any_of('-', '<', NULL_CHAR)
-            tokeniser.emit(data)
+            tokeniser.emit(data)"""
 
 
 class ScriptDataDoubleEscapedDashDashState(State):
@@ -820,7 +820,7 @@ class ScriptDataDoubleEscapedDashDashState(State):
             tokeniser.emit("-")
         elif read_c == "<":
             tokeniser.emit("<")
-            tokeniser.move_to_state(SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN)
+            tokeniser.move(SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN)
         elif read_c == ">":
             tokeniser.emit(">")
             tokeniser.move(SCRIPT_DATA)
@@ -841,7 +841,7 @@ class ScriptDataDoubleEscapeEndState(State):
         if reader.match_letter():
             name = reader.consume_word()
             tokeniser.script_buffer += name
-            tokeniser.emit(name)
+            tokeniser.emit_string(name)
             return
         read_c = reader.consume()
         if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " " or read_c == "/" or read_c == ">":
@@ -1029,7 +1029,7 @@ class BeforeDoctypeNameState(State):
 class DoctypeNameState(State):
     def read(self, reader, tokeniser):
         if reader.match_letter():
-            name = reader.consume_seq()
+            name = reader.consume_word()
             tokeniser.doctype_pending.name += name
             return
         read_c = reader.consume()
@@ -1105,15 +1105,245 @@ class AfterDoctypePublicKeyState(State):
 
 
 class AfterDoctypeSystemKeyState(State):
-    pass
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            tokeniser.move(BEFORE_DOCTYPE_SYSTEM_ID)
+        elif read_c == ">":
+            tokeniser.error("AfterDoctypeSystemKeyState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        elif read_c == '"':
+            tokeniser.error("AfterDoctypeSystemKeyState")
+            tokeniser.move(DOCTYPE_SYSTEM_ID_DOUBLE_QUOTED)
+        elif read_c == "'":
+            tokeniser.error("AfterDoctypeSystemKeyState")
+            tokeniser.move(DOCTYPE_SYSTEM_ID_SINGLE_QUOTED)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("AfterDoctypeSystemKeyState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.eof_error("AfterDoctypeSystemKeyState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
 
 
 class BogusDoctypeState(State):
-    pass
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == ">" or read_c == reader.EOF:
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
 
 
 class BeforeDoctypePublicIdState(State):
-    
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            pass
+        elif read_c == '"':
+            tokeniser.move(DOCTYPE_PUBLIC_ID_DOUBLE_QUOTED)
+        elif read_c == "'":
+            tokeniser.move(DOCTYPE_PUBLIC_ID_SINGLE_QUOTED)
+        elif read_c == ">":
+            tokeniser.error("BeforeDoctypePublicIdState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("BeforeDoctypePublicIdState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.eof_error("BeforeDoctypePublicIdState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.move(BOGUS_DOCTYPE)
+
+
+class DoctypePublicIdDoubleQuotedState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == "'":
+            tokeniser.move(AFTER_DOCTYPE_PUBLIC_ID)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("DoctypePublicIdDoubleQuotedState")
+            tokeniser.doctype_pending.public_identifier += REPLACE_CHAR
+        elif read_c == ">":
+            tokeniser.error("DoctypePublicIdDoubleQuotedState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("DoctypePublicIdDoubleQuotedState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.doctype_pending.public_identifier += read_c
+
+
+class DoctypePublicIdSingleQuotedState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '"':
+            tokeniser.move(AFTER_DOCTYPE_PUBLIC_ID)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("DoctypePublicIdSingleQuotedState")
+            tokeniser.doctype_pending.public_identifier += REPLACE_CHAR
+        elif read_c == ">":
+            tokeniser.error("DoctypePublicIdSingleQuotedState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("DoctypePublicIdDoubleQuoted")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.doctype_pending.public_identifier += read_c
+
+
+
+class AfterDoctypePublicIdState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            tokeniser.move(BETWEEN_PUB_AND_SYS_IDS)
+        elif read_c == ">":
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        elif read_c == '"':
+            tokeniser.error("AfterDoctypePublicIdState")
+            tokeniser.move(DOCTYPE_SYSTEM_ID_DOUBLE_QUOTED)
+        elif read_c == "'":
+            tokeniser.error("AfterDoctypePublicIdState")
+            tokeniser.move(DOCTYPE_SYSTEM_ID_SINGLE_QUOTED)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("AfterDoctypePublicIdState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.error("AfterDoctypePublicIdState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.move(BOGUS_DOCTYPE)
+
+
+class BetweenPubAndSysIdsState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            pass
+        elif read_c == ">":
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        elif read_c == '"':
+            tokeniser.error("BetweenPubAndSysIdsState")
+            tokeniser.move(DOCTYPE_SYSTEM_ID_DOUBLE_QUOTED)
+        elif read_c == "'":
+            tokeniser.error("BetweenPubAndSysIdsState")
+            tokeniser.move(DOCTYPE_SYSTEM_ID_SINGLE_QUOTED)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("BetweenPubAndSysIdsState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.error("BetweenPubAndSysIdsState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.move(BOGUS_DOCTYPE)
+
+
+class DoctypeSystemIdSingleQuoted(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == "'":
+            tokeniser.move(AFTER_DOCTYPE_SYSTEM_ID)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("DoctypeSystemIdDoubleQuoted")
+            tokeniser.doctype_pending.system_identifier += REPLACE_CHAR
+        elif read_c == ">":
+            tokeniser.error("DoctypeSystemIdDoubleQuoted")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("DoctypeSystemIdDoubleQuoted")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.doctype_pending.system_identifier += read_c
+
+
+class DoctypeSystemIdDoubleQuoted(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '"':
+            tokeniser.move(AFTER_DOCTYPE_SYSTEM_ID)
+        elif read_c == NULL_CHAR:
+            tokeniser.error("DoctypeSystemIdDoubleQuoted")
+            tokeniser.doctype_pending.system_identifier += REPLACE_CHAR
+        elif read_c == ">":
+            tokeniser.error("DoctypeSystemIdDoubleQuoted")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("DoctypeSystemIdDoubleQuoted")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.doctype_pending.system_identifier += read_c
+
+
+class BeforeDoctypeSystemIdState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            pass
+        elif read_c == '"':
+            tokeniser.move(DOCTYPE_SYSTEM_ID_DOUBLE_QUOTED)
+        elif read_c == "'":
+            tokeniser.move(DOCTYPE_SYSTEM_ID_SINGLE_QUOTED)
+        elif read_c == ">":
+            tokeniser.error("BeforeDoctypeSystemIdState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("BeforeDoctypeSystemIdState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.error("BeforeDoctypeSystemIdState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.move(BOGUS_DOCTYPE)
+
+
+class AfterDoctypeSystemIdState(State):
+    def read(self, reader, tokeniser):
+        read_c = reader.consume()
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
+            pass
+        elif read_c == ">":
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        elif read_c == reader.EOF:
+            tokeniser.eof_error("AfterDoctypeSystemIdState")
+            tokeniser.doctype_pending.force_quirks = True
+            tokeniser.emit_doctype_pending()
+            tokeniser.move(DATA)
+        else:
+            tokeniser.error("AfterDoctypeSystemIdState")
+            tokeniser.move(BOGUS_DOCTYPE)
 
 
 DATA = DataState()
@@ -1173,3 +1403,12 @@ AFTER_DOCTYPE_PUBLIC_KEY = AfterDoctypePublicKeyState()
 AFTER_DOCTYPE_SYSTEM_KEY = AfterDoctypeSystemKeyState()
 BOGUS_DOCTYPE = BogusDoctypeState()
 BEFORE_DOCTYPE_PUBLIC_ID = BeforeDoctypePublicIdState()
+DOCTYPE_PUBLIC_ID_DOUBLE_QUOTED = DoctypePublicIdDoubleQuotedState()
+DOCTYPE_PUBLIC_ID_SINGLE_QUOTED = DoctypePublicIdSingleQuotedState()
+AFTER_DOCTYPE_PUBLIC_ID = AfterDoctypePublicIdState()
+BETWEEN_PUB_AND_SYS_IDS = BetweenPubAndSysIdsState()
+DOCTYPE_SYSTEM_ID_DOUBLE_QUOTED = DoctypeSystemIdDoubleQuoted()
+DOCTYPE_SYSTEM_ID_SINGLE_QUOTED = DoctypeSystemIdSingleQuoted()
+BEFORE_DOCTYPE_SYSTEM_ID = BeforeDoctypeSystemIdState()
+AFTER_DOCTYPE_SYSTEM_ID = AfterDoctypeSystemIdState()
+

@@ -98,7 +98,7 @@ class StartTagToken(TagToken):
         return "<" + self.name + " " + self.attrs + ">"
 
 
-class EndTag(TagToken):
+class EndTagToken(TagToken):
     def __init__(self):
         TagToken.__init__()
         self.type == TokenType.END_TAG

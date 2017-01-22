@@ -12,6 +12,7 @@ class Tokeniser(object):
         self.comment_pending = token.CommentToken()
         self.doctype_pending = token.DoctypeToken()
         self.script_buffer = ''
+        self.last_start_tag = None
 
     def move_to_state(self, state):
         self.reader.advance()
@@ -23,35 +24,44 @@ class Tokeniser(object):
     def emit(self, consumed):
         pass
 
-    def error(self, state):
+    def emit_token(self, token):
         pass
+
+    def emit_string(self, string):
+        pass
+
+    def error(self, state):
+        self.errors.append(state)
 
     def eof_error(self, token):
-        pass
+        self.errors.append("EOF error: " + token)
 
     def emit_tag_pending(self):
-        pass
+        self.tag_pending.finalise_tag()
+        self.emit(self.tag_pending)
 
     def emit_comment_pending(self):
-        pass
+        self.emit(self.comment_pending)
 
     def emit_doctype_pending(self):
-        pass
+        self.emit(self.doctype_pending)
 
     def consume_char_ref(self, additional_char, in_attr):
         pass
 
-    def create_tag_pending(self, bool=False):
-        pass
+    def create_tag_pending(self, start=False):
+        tag_pending = token.StartTagToken() if start else token.EndTagToken()
+        return tag_pending
 
     def create_comment_pending(self):
-        pass
+        self.comment_pending = token.CommentToken()
 
     def create_doctype_pending(self):
-        pass
+        self.doctype_pending = token.DoctypeToken()
 
     def approptiate_end_tag_token(self):
-        pass
+        return self.last_start_tag is not None and self.tag_pending.name.lower() == self.last_start_tag.lower()
 
     def approptiate_end_tag_name(self):
-        pass
+        return self.last_start_tag
+
