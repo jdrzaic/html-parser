@@ -1,17 +1,15 @@
 from abc import ABCMeta
-from cStringIO import StringIO
-
 import attributes
 
 
 class TokenType(object):
-    NO_TYPE = 0
-    START_TAG = 1
-    END_TAG = 2
-    CHARACTER = 3
-    COMMENT = 4
-    DOCTYPE = 5
-    EOF = 6
+    NO_TYPE = "no_type"
+    START_TAG = "start_tag"
+    END_TAG = "end_tag"
+    CHARACTER = "character_token"
+    COMMENT = "comment_token"
+    DOCTYPE = "doctype_token"
+    EOF = "eof_token"
 
 
 class Token(object):
@@ -27,10 +25,10 @@ class Token(object):
 class DoctypeToken(Token):
 
     def __init__(self):
-        Token.__init__()
-        self.public_identifier = StringIO()
-        self.system_identifier = StringIO()
-        self.name = StringIO()
+        super(DoctypeToken, self).__init__()
+        self.public_identifier = ''
+        self.system_identifier = ''
+        self.name = ''
         self.sys_key = ''
         self.type = TokenType.DOCTYPE
         self.force_quirks = False
@@ -40,11 +38,11 @@ class TagToken(Token):
     __metaclass__ = ABCMeta
 
     def __init__(self):
-        Token.__init__()
+        super(TagToken, self).__init__()
         self.tag_name = ''
         self.tag_lc_name = ''
         self.pending_attr_name = ''
-        self.pending_attr_value = StringIO()
+        self.pending_attr_value = ''
         self.is_empty_attr_name = False
         self.is_empty_attr_value = False
         self.is_self_closing = False
@@ -58,9 +56,9 @@ class TagToken(Token):
                 attribute = attributes.Attribute(self.pending_attr_name, "")
             else:
                 attribute = attributes.BoolAttribute(self.pending_attr_name)
-            attributes[self.pending_attr_name] = attribute
+            self.attrs.attrs[self.pending_attr_name] = attribute
         self.pending_attr_name = ''
-        self.pending_attr_value = StringIO()
+        self.pending_attr_value = ''
         self.is_empty_attr_value = False
         self.is_empty_attr_name = False
 
@@ -88,27 +86,28 @@ class TagToken(Token):
 
 class StartTagToken(TagToken):
     def __init__(self, name, attrs):
-        TagToken.__init__()
+        super(StartTagToken, self).__init__()
         self.type = TokenType.START_TAG
         self.attrs = attrs
-        self.name = name
+        self.tag_name = name
         self.tag_lc_name = name.lower()
 
     def __str__(self):
-        return "<" + self.name + " " + self.attrs + ">"
+        return "<" + self.tag_name + "" + self.attrs.__str__() + ">"
 
 
 class EndTagToken(TagToken):
     def __init__(self):
-        TagToken.__init__()
-        self.type == TokenType.END_TAG
+        super(EndTagToken, self).__init__()
+        self.type = TokenType.END_TAG
 
     def __str__(self):
-        return "</" + self.name + ">"
+        return "</" + self.tag_name + ">"
 
 
 class CommentToken(Token):
     def __init__(self):
+        super(CommentToken, self).__init__()
         self.data = ''
         self.bogus = False
 
@@ -119,7 +118,7 @@ class CommentToken(Token):
 class CharacterToken(Token):
 
     def __init__(self):
-        Token.__init__()
+        super(CharacterToken, self).__init__()
         self.type = TokenType.CHARACTER
         self.data = ''
 
@@ -129,4 +128,5 @@ class CharacterToken(Token):
 
 class EOFToken(Token):
     def __init__(self):
+        super(EOFToken, self).__init__()
         self.type = TokenType.EOF

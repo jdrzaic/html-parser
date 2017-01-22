@@ -1,5 +1,3 @@
-from cStringIO import StringIO
-
 BOOLEAN_ATTRS = ["allowfullscreen", "async", "autofocus", "checked", "compact", "declare",
                  "default", "defer", "disabled", "formnovalidate", "hidden", "inert", "ismap",
                  "itemscope", "multiple", "muted", "nohref", "noresize", "noshade",
@@ -15,7 +13,7 @@ class Attribute(object):
     def __init__(self, key, value):
         self.key = key.strip()
         self.value = value
-        if not self.key or not self.value:
+        if not self.key or self.value is None:
             raise ValueError('attribute key or value empty')
 
     def get_html(self):
@@ -42,7 +40,7 @@ class Attribute(object):
 class BoolAttribute(Attribute):
 
     def __init__(self, key):
-        Attribute.__init__(key, "")
+        super(BoolAttribute, self).__init__(key, "")
 
 
 class Attributes(object):
@@ -67,11 +65,12 @@ class Attributes(object):
         return False
 
     def get_html(self):
+        content = ''
         for attr_key in self.attrs:
-            content = StringIO()
             attr = self.attrs.get(attr_key)
-            content.write(" ")
-            content.write(attr.get_html())
+            content += " "
+            content += attr.get_html()
+        return content
 
     def __str__(self):
         return self.get_html()

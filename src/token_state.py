@@ -15,7 +15,7 @@ class State(object):
 
 class DataState(State):
     def read(self, reader, tokeniser):
-        read_c = reader.curr()
+        read_c = reader.current()
         if read_c == "&":
             tokeniser.move_to_state(CHAR_REF_IN_DATA)
         elif read_c == "<":
@@ -157,7 +157,8 @@ class RcDataLessThanSignState(State):
         if reader.match("/"):
             tokeniser.script_buffer = ""
             tokeniser.move_to_state(RCDATA_END_TAG_OPEN)
-        elif reader.match_letter() and tokeniser.approptiate_end_tag_name() and not reader.contains_ignore_case("</" + tokeniser.approptiate_end_tag_name()):
+        elif reader.match_letter() and tokeniser.approptiate_end_tag_name() and not reader.contains_ignore_case(
+                        "</" + tokeniser.approptiate_end_tag_name()):
             tokeniser.tag_pending = tokeniser.create_tag_pending()
             tokeniser.tag_pending.name = tokeniser.approptiate_end_tag_name()
             tokeniser.emit_tag_pending()
@@ -279,6 +280,9 @@ class BeforeAttrNameState(State):
 
 class AttrNameState(State):
     def read(self, reader, tokeniser):
+        name = reader.consume_to_any_of(
+            '\t', '\n', '\r', '\f', ' ', '/', '=', '>', NULL_CHAR, '"', '\'', '<')
+        tokeniser.tag_pending.append_attr_name(name)
         read_c = reader.consume()
         if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f'or read_c == " ":
             tokeniser.move(AFTER_ATTR_NAME)
@@ -931,6 +935,7 @@ class CommentState(State):
             tokeniser.emit_comment_pending()
             tokeniser.move(DATA)
         else:
+            tokeniser.comment_pending.data += read_c
             tokeniser.comment_pending.data += reader.consume_to_any_of('-', NULL_CHAR)
 
 
