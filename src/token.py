@@ -85,7 +85,7 @@ class TagToken(Token):
 
 
 class StartTagToken(TagToken):
-    def __init__(self, name, attrs):
+    def __init__(self, name='', attrs=attributes.Attributes()):
         super(StartTagToken, self).__init__()
         self.type = TokenType.START_TAG
         self.attrs = attrs
@@ -97,9 +97,10 @@ class StartTagToken(TagToken):
 
 
 class EndTagToken(TagToken):
-    def __init__(self):
+    def __init__(self, name=''):
         super(EndTagToken, self).__init__()
         self.type = TokenType.END_TAG
+        self.name = name
 
     def __str__(self):
         return "</" + self.tag_name + ">"

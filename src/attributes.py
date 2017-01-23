@@ -67,6 +67,7 @@ class Attributes(object):
     def get_value(self, key):
         if key in self.attrs.keys():
             return self.attrs.get(key).value
+        return None
 
     def get_value_ignore_key_case(self, key):
         for attr_key in self.attrs.keys():

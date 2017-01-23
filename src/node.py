@@ -152,6 +152,7 @@ class Element(Node):
             self.attributes = attributes or atr.Attributes()
 
 
+
 class QuirksMode(object):
     NO_QUIRKS = 0
     QUIRKS = 1
