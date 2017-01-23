@@ -591,35 +591,461 @@ class AfterHeadState(State):
 
 
 class InTableState(State):
-    pass
+    def process_token(self, token, tree_builder):
+        if token.type == t.TokenType.CHARACTER:
+            tree_builder.new_pending_table_chars()
+            tree_builder.mark_insertion()
+            tree_builder.move(IN_TABLE_TEXT)
+            return tree_builder.process_token(token)
+        elif token.type == t.TokenType.COMMENT:
+            tree_builder.insert(token)
+            return True
+        elif token.type == t.TokenType.DOCTYPE:
+            tree_builder.error("InTableState")
+            return False
+        elif token.type == t.TokenType.START_TAG:
+            name = token.tag_lc_name
+            if name == "caption":
+                tree_builder.clear_stack_to_table_context()
+                tree_builder.insert_marker_to_formatting()
+                tree_builder.insert(token)
+                tree_builder.move(IN_CAPTION)
+            elif name == "colgroup":
+                tree_builder.clear_stack_to_table_context()
+                tree_builder.insert(token)
+                tree_builder.move(IN_COLUMN_GROUP)
+            elif name == "col":
+                tree_builder.process_start("colgroup")
+                return tree_builder.process_token(token)
+            elif name in ["tbody", "tfoot", "thead"]:
+                tree_builder.clear_stack_to_table_context()
+                tree_builder.insert(token)
+                tree_builder.move(IN_TABLE_BODY)
+            elif name in ["tb", "th", "tr"]:
+                tree_builder.process_start("tbody")
+                return tree_builder.process_token(token)
+            elif name == "table":
+                tree_builder.error("InTableState")
+                processed = tree_builder.process_end("table")
+                if processed:
+                    tree_builder.process_token(token)
+            elif name in ["style", "script"]:
+                return tree_builder.process(token, IN_HEAD)
+        elif token.type == t.TokenType.END_TAG:
+            name = token.tag_lc_name
+            if name == "table":
+                if not tree_builder.in_table_scope(name):
+                    tree_builder.error("InTableState")
+                    return False
+                else:
+                    tree_builder.pop_stack_to_close("table")
+                tree_builder.reset_insertion()
+            elif name in ["body", "caption", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"]:
+                tree_builder.error("InTableState")
+                return False
+            else:
+                return self.anything_else(token, tree_builder)
+            return True
+        elif token.type == t.TokenType.EOF:
+            if tree_builder.current_element.name == "html":
+                tree_builder.error("InTableState")
+            return True
+        return self.anything_else(token, tree_builder)
+
+    def anything_else(self, token, tree_builder):
+        pass
 
 
 class InCaptionState(State):
-    pass
+    def process_token(self, token, tree_builder):
+        if token.type == t.TokenType.END_TAG and token.tag_lc_name == "caption":
+            name = token.tag_lc_name
+            if tree_builder.in_table_scope(name):
+                tree_builder.error("InCaptionState")
+                return False
+            else:
+                tree_builder.generate_implied_end()
+                if not tree_builder.current_element.name == "caption":
+                    tree_builder.error("InCaptionState")
+                tree_builder.pop_stack_to_close("caption")
+                tree_builder.clear_formatting_to_last_marker()
+                tree_builder.move(IN_TABLE)
+        elif token.type == t.TokenType.START_TAG and token.tag_lc_name in [
+            "caption", "col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr"] or (
+            token.type == t.TokenType.END_TAG and token.tag_lc_name == "table"):
+            tree_builder.error("InCaptionState")
+            processed = tree_builder.process_end("caption")
+            if processed:
+                return tree_builder.process_token(token)
+        elif token.type == t.TokenType.END_TAG and token.tag_lc_name == [
+            "body", "col", "colgroup","html", "tbody", "td", "tfoot", "th", "thead", "tr"]:
+            tree_builder.error("InCaptionState")
+            return False
+        else:
+            return tree_builder.process_token(token, IN_BODY)
 
 
 class InRowState(State):
-    pass
+    def process_token(self, token, tree_builder):
+        if token.type == t.TokenType.START_TAG:
+            name = token.tag_lc_name
+            if name in ["th", "td"]:
+                tree_builder.clear_stack_to_table_row_context()
+                tree_builder.insert(token)
+                tree_builder.move(IN_CELL)
+                tree_builder.insert_marker_to_formatting()
+            elif name in ["caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr"]:
+                processed = tree_builder.process_end("tr")
+                if processed:
+                    return tree_builder.process_token(token)
+                return False
+            else:
+                return tree_builder.process_token(token, IN_TABLE)
+        elif token.type == t.TokenType.END_TAG:
+            name = token.tag_lc_name
+            if name == "tr":
+                if not tree_builder.in_table_scope("tr"):
+                    tree_builder.error("InRowState")
+                    return False
+                tree_builder.clear_stack_to_table_row_context()
+                tree_builder.pop()
+                tree_builder.move(IN_TABLE_BODY)
+            elif name == "table":
+                processed = tree_builder.process_end("tr")
+                if processed:
+                    return tree_builder.process_token(token)
+                return False
+            elif name in ["tbody", "tfoot", "thead"]:
+                if not tree_builder.in_table_scope(name):
+                    tree_builder.error("InRowState")
+                    return False
+                tree_builder.process_end("tr")
+                return tree_builder.process_token(token)
+            elif name in ["body", "caption", "col", "colgroup", "html", "td", "th"]:
+                tree_builder.error("InRowState")
+                return False
+            else:
+                return tree_builder.process_token(token, IN_TABLE)
+        else:
+            return tree_builder.process_token(token, IN_TABLE)
+        return True
 
 
 class InCellState(State):
-    pass
+    def process_token(self, token, tree_builder):
+        if token.type == t.TokenType.END_TAG:
+            name = token.tag_lc_name
+            if name in ["td", "th"]:
+                if not tree_builder.in_table_scope(name):
+                    tree_builder.error("InCellState")
+                    tree_builder.move(IN_ROW)
+                    return False
+                tree_builder.generate_implied_end()
+                if not tree_builder.current_element.name == name:
+                    tree_builder.error("InCellState")
+                tree_builder.pop_stack_to_close(name)
+                tree_builder.clear_formatting_to_last_marker()
+                tree_builder.move(IN_ROW)
+            elif name in ["body", "caption", "col", "colgroup", "html"]:
+                tree_builder.error("InCellState")
+                return False
+            elif name in ["table", "tbody", "tfoot", "thead", "tr"]:
+                if not tree_builder.in_table_scope(name):
+                    tree_builder.error("InCellState")
+                    return False
+                if tree_builder.in_table_scope("td"):
+                    tree_builder.process_end("td")
+                else:
+                    tree_builder.process_end("th")
+                return tree_builder.process_token(token)
+            else:
+                return tree_builder.process_token(token, IN_BODY)
+        elif token.type == t.TokenType.START_TAG and token.tag_lc_name in [
+            "caption", "col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr"]:
+            if not tree_builder.in_table_scope("td") or tree_builder.in_table_scope("th"):
+                tree_builder.error("InCellState")
+                return False
+            if tree_builder.in_table_scope("td"):
+                tree_builder.process_end("td")
+            else:
+                tree_builder.process_end("th")
+            return tree_builder.process_token(token)
+        else:
+            return tree_builder.process_token(token, IN_BODY)
+        return True
 
 
 class InFramesetState(State):
-    pass
+    def process_token(self, token, tree_builder):
+        if self.is_white(token) or token.type == t.TokenType.COMMENT:
+            tree_builder.insert(token)
+        elif token.type == t.TokenType.START_TAG:
+            name = token.tag_lc_name
+            if name == "html":
+                return tree_builder.process_token(token, IN_BODY)
+            elif name == "frameset":
+                tree_builder.insert(token)
+            elif name == "noframes":
+                return tree_builder.process_token(token, IN_HEAD)
+            else:
+                return False
+        elif token.type == t.TokenType.END_TAG and token.tag_lc_name == "frameset":
+            tree_builder.pop()
+            tree_builder.move(AFTER_FRAMESET)
+        elif token.type == t.TokenType.EOF:
+            if not tree_builder.current_element.name == "html":
+                return True
+        else:
+            return False
+        return True
 
 
 class InSelectState(State):
-    pass
+    def process_token(self, token, tree_builder):
+        if token.type == t.TokenType.CHARACTER:
+            if not token.data:
+                tree_builder.error("InSelectState")
+                return False
+            else:
+                tree_builder.insert(token)
+        elif token.type == t.TokenType.COMMENT:
+            tree_builder.insert(token)
+        elif token.type == t.TokenType.START_TAG:
+            name = token.tag_lc_name
+            if name == "html":
+                return tree_builder.process_token(token, IN_BODY)
+            elif name == "option":
+                tree_builder.process_end("option")
+                tree_builder.insert(token)
+            elif name == "optgroup":
+                if tree_builder.current_element.name in ["optgroup", "option"]:
+                    tree_builder.process_end(tree_builder.current_element.name)
+                tree_builder.insert(token)
+            elif name == "select":
+                tree_builder.process_end("select")
+            elif name in ["input", "textarea", "keygen"]:
+                tree_builder.error("InSelectState")
+                if not tree_builder.in_select_scope("select"):
+                    return False
+                tree_builder.process_end("select")
+                return tree_builder.process_token(token)
+            elif name == "script":
+                return tree_builder.process_token(token, IN_HEAD)
+            else:
+                return False
+        elif token.type == t.TokenType.END_TAG:
+            name = token.tag_lc_name
+            if name == "optgroup":
+                if tree_builder.current_element.name == "option" and tree_builder.above_on_stack(
+                        tree_builder.current_element) and tree_builder.above_on_stack(
+                    tree_builder.current_element).name == "optgroup":
+                    tree_builder.process_end("option")
+                elif tree_builder.current_element.name == "optgroup":
+                    tree_builder.pop()
+            elif name == "option":
+                if tree_builder.current_element.name == "option":
+                    tree_builder.pop()
+            elif name == "select":
+                if not tree_builder.in_select_scope(name):
+                    return False
+                else:
+                    tree_builder.pop_stack_to_close(name)
+                    tree_builder.reset_insertion()
+            else:
+                return False
+        else:
+            return False
+        return True
 
 
 class InSelectInTableState(State):
-    pass
+    def process_token(self, token, tree_builder):
+        if token.type == t.TokenType.START_TAG and token.tag_lc_name in [
+            "caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th"
+        ]:
+            tree_builder.error("InSelectInTableState")
+            tree_builder.process_end("select")
+            return tree_builder.process_token(token)
+        elif token.type == t.TokenType.END_TAG and token.tag_lc_name in [
+            "caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th"]:
+            if tree_builder.in_table_scope(token.tag_lc_name):
+                tree_builder.process_end("select")
+                return tree_builder.process_token(token)
+            else:
+                return False
+        else:
+            return tree_builder.process_token(token, IN_SELECT)
 
 
 class InTableBodyState(State):
-    pass
+    def process_token(self, token, tree_builder):
+        if token.type == t.TokenType.START_TAG:
+            name = token.tag_lc_name
+            if name == "tr":
+                tree_builder.clear_stack_to_table_body_context()
+                tree_builder.insert(token)
+                tree_builder.move(IN_ROW)
+            elif name in ["th", "td"]:
+                tree_builder.error("InTableBodyState")
+                tree_builder.process_start("tr")
+                return tree_builder.process_token(token)
+            elif name in ["caption", "col", "colgroup", "tbody", "tfoot", "thead"]:
+                return self.exit_table_body(token, tree_builder)
+            else:
+                return tree_builder.process_token(token, IN_TABLE)
+        elif token.type == t.TokenType.END_TAG:
+            name = token.tag_lc_name
+            if name in ["tbody", "tfoot", "thead"]:
+                if not tree_builder.in_table_scope(name):
+                    tree_builder.error("InTableBodyState")
+                    return False
+                else:
+                    tree_builder.clear_stack_to_table_body_context()
+                    tree_builder.pop()
+                    tree_builder.move(IN_TABLE)
+            elif name == "table":
+                if not tree_builder.in_table_scope("tbody") or tree_builder.in_table_scope("thead") or tree_builder.in_table_scope("tfoot"):
+                    return False
+                tree_builder.clear_stack_to_table_body_context()
+                tree_builder.process_end(tree_builder.current_element.name)
+                return tree_builder.process_token(token)
+            elif name in ["body", "caption", "col", "colgroup", "html", "td", "th", "tr"]:
+                tree_builder.error("IntableBodyState")
+                return False
+            else:
+                return tree_builder.process_token(token, IN_TABLE)
+        return True
+
+    def exit_table_body(self, token, tree_builder):
+        if tree_builder.in_table_scope("tbody") or tree_builder.in_table_scope("thead") or tree_builder.in_table_scope("tfoot"):
+            return False
+        tree_builder.clear_stack_to_table_body_context()
+        tree_builder.process_end(tree_builder.current_element.name)
+        return tree_builder.process_token(token)
+
+
+class InTableTextState(State):
+    def process_token(self, token, tree_builder):
+        if token.type == t.TokenType.CHARACTER and token.data:
+            tree_builder.pending_table_chars += token.data
+        else:
+            if tree_builder.pending_table_chars:
+                for char in tree_builder.pending_table_chars:
+                    ch = t.CharacterToken()
+                    ch.data = char
+                    if self.is_white(token):
+                        if tree_builder.current_element.nama in ["table", "tbody", "tfoot", "thead", "tr"]:
+                            tree_builder.set_foster_inserts(True)
+                            tree_builder.process_token(ch, IN_BODY)
+                            tree_builder.set_foster_inserts(False)
+                        else:
+                            tree_builder.process_token(ch, IN_BODY)
+                    else:
+                        tree_builder.insert(ch)
+                tree_builder.new_pending_table_chars()
+            tree_builder.move(tree_builder.original_state)
+            return tree_builder.process_token(token)
+        return True
+
+
+class InColumnGroupState(State):
+    def process_token(self, token, tree_builder):
+        if self.is_white(token):
+            tree_builder.insert(token)
+            return True
+        if token.type == t.TokenType.COMMENT:
+            tree_builder.insert(token)
+        elif token.type == t.TokenType.DOCTYPE:
+            return True
+        elif token.type == t.TokenType.START_TAG:
+            name = token.tag_lc_name
+            if name == "html":
+                return tree_builder.process_token(token, IN_BODY)
+            elif name == "col":
+                tree_builder.insert_empty(token)
+            else:
+                self.anything_else(token, tree_builder)
+        elif token.type == t.TokenType.END_TAG:
+            name = token.tag_lc_name
+            if name == "colgroup":
+                if tree_builder.current_element.name == "html":
+                    tree_builder.error("InColumnGroupState")
+                    return False
+                else:
+                    tree_builder.pop()
+                    tree_builder.move(IN_TABLE)
+            else:
+                return self.anything_else(token, tree_builder)
+        elif token.type == t.TokenType.EOF:
+            if tree_builder.current_element.name == "html":
+                return True
+            return self.anything_else(token, tree_builder)
+        else:
+            return self.anything_else(token, tree_builder)
+        return True
+
+
+class AfterBodyState(State):
+    def process_token(self, token, tree_builder):
+        if self.is_white(token):
+            return tree_builder.process_token(token, IN_BODY)
+        elif token.type == t.TokenType.COMMENT:
+            tree_builder.insert(token)
+        elif token.type == t.TokenType.DOCTYPE:
+            tree_builder.error("AfterBodyState")
+            return False
+        elif token.type == t.TokenType.START_TAG and token.tag_lc_name == "html":
+            return tree_builder.process_token(token, IN_BODY)
+        elif token.type == t.TokenType.END_TAG and token.tag_lc_name == "html":
+            tree_builder.move(AFTER_AFTER_BODY)
+        else:
+            tree_builder.move(IN_BODY)
+            return tree_builder.process_token(token)
+        return True
+
+
+class AfterAfterBodyState(State):
+    def process_token(self, token, tree_builder):
+        if token.type == t.TokenType.COMMENT:
+            tree_builder.insert(token)
+        elif token.type == t.TokenType.DOCTYPE or self.is_white(token) or (
+                        token.type == t.TokenType.START_TAG and token.tag_lc_name == "html"):
+            return tree_builder.process_token(token, IN_BODY)
+        else:
+            tree_builder.error("AfterAfterBodyState")
+            tree_builder.move(IN_BODY)
+            return tree_builder.process_token(token)
+        return True
+
+
+class AfterFramesetState(State):
+    def process_token(self, token, tree_builder):
+        if self.is_white(token):
+            tree_builder.insert(token)
+        elif token.type == t.TokenType.COMMENT:
+            tree_builder.insert(token)
+        elif token.type == t.TokenType.START_TAG and token.tag_lc_name == "html":
+            return tree_builder.process_token(token, IN_BODY)
+        elif token.type == t.TokenType.END_TAG and token.tag_lc_name == "html":
+            tree_builder.move(AFTER_AFTER_FRAMESET)
+        elif token.type == t.TokenType.START_TAG and token.tag_lc_name == "noframes":
+            return tree_builder.process_token(token, IN_HEAD)
+        else:
+            return False
+        return True
+
+
+class AfterAfterFramesetState(State):
+    def process_token(self, token, tree_builder):
+        if token.type == t.TokenType.COMMENT:
+            tree_builder.insert(token)
+            return True
+        elif self.is_white(token) or (token.type == t.TokenType.START_TAG and token.tag_lc_name == "html"):
+            return tree_builder.process_token(token, IN_BODY)
+        elif token.type == t.TokenType.START_TAG and token.tag_lc_name == "noframes":
+            return tree_builder.process_token(token, IN_HEAD)
+        else:
+            return False
 
 
 INITIAL = InitialState()
@@ -638,3 +1064,9 @@ IN_FRAMESET = InFramesetState()
 IN_SELECT = InSelectState()
 IN_SELECT_IN_TABLE = InSelectInTableState()
 IN_TABLE_BODY = InTableBodyState()
+IN_TABLE_TEXT = InTableTextState()
+IN_COLUMN_GROUP = InColumnGroupState()
+AFTER_BODY = AfterBodyState()
+AFTER_AFTER_BODY = AfterAfterBodyState()
+AFTER_FRAMESET = AfterFramesetState()
+AFTER_AFTER_FRAMESET = AfterAfterFramesetState()
