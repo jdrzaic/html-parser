@@ -64,6 +64,7 @@ class Comment(Node):
         super(Comment, self).__init__()
         self.attributes.attrs[COMMENT_KEY] = data
         self.data = data
+        self.name = "#comment"
 
     def name(self):
         return "#comment"
@@ -73,6 +74,7 @@ class Data(Node):
     def __init__(self, data):
         super(Data, self).__init__()
         self.attributes.attrs[DATA_KEY] = data
+        self.name = "#data"
 
     @classmethod
     def create_from_encoded(cls, encoded_data):
@@ -86,6 +88,7 @@ class Data(Node):
 class DocumentType(Node):
     def __init__(self, name, public_id, system_id, pub_sys=None):
         super(DocumentType, self).__init__()
+        self.name = "#documenttype"
         self.attributes.attrs["name"] = name
         self.attributes.attrs["public_id"] = public_id
         self.attributes.attrs["system_id"] = system_id
@@ -102,6 +105,7 @@ class Text(Node):
     def __init__(self, text):
         super(Text, self).__init__()
         self.text = text
+        self.name = "#text"
         self.attributes.attrs["text"] = text
 
     def name(self):
@@ -134,8 +138,10 @@ class Text(Node):
         text = ce.Entities.unescape(text, False)
         return Text(text)
 
+
 class Element(Node):
     def __init__(self, tag_name=None, tag=None, attributes=None):
+        self.name = "#element"
         if tag_name:
             tag = ht.Tag.value_of(tag_name)
             if tag:
@@ -158,6 +164,9 @@ class Document(Element):
         super(Document, self).__init__(tag=ht.Tag.value_of("#root"))
         self.force_quirks = QuirksMode.NO_QUIRKS
         self.location = url
+
+    def append_child(self, node_to_add):
+        pass
 
 
 class FormElement(Element):
