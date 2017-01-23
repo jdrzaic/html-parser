@@ -241,7 +241,7 @@ class InBodyState(State):
             elif name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
                 if tree_builder.in_button_scope("p"):
                     tree_builder.process_end("p")
-                if tree_builder.current_element().name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
+                if tree_builder.current_element.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
                     tree_builder.pop()
                 tree_builder.insert(token)
             elif name in ["pre", "listing"]:
@@ -868,7 +868,7 @@ class InSelectState(State):
             if name == "optgroup":
                 if tree_builder.current_element.name == "option" and tree_builder.above_on_stack(
                         tree_builder.current_element) and tree_builder.above_on_stack(
-                    tree_builder.current_element).name == "optgroup":
+                        tree_builder.current_element).name == "optgroup":
                     tree_builder.process_end("option")
                 elif tree_builder.current_element.name == "optgroup":
                     tree_builder.pop()
@@ -964,7 +964,7 @@ class InTableTextState(State):
                     ch = t.CharacterToken()
                     ch.data = char
                     if self.is_white(token):
-                        if tree_builder.current_element.nama in ["table", "tbody", "tfoot", "thead", "tr"]:
+                        if tree_builder.current_element.name in ["table", "tbody", "tfoot", "thead", "tr"]:
                             tree_builder.set_foster_inserts(True)
                             tree_builder.process_token(ch, IN_BODY)
                             tree_builder.set_foster_inserts(False)
