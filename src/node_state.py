@@ -11,17 +11,41 @@ class State(object):
     def process_token(self, token, tree_builder):
         pass
 
-    def is_white(self, t):
-        pass
+    def is_white(self, token):
+        if token.type == t.TokenType.CHARACTER:
+            for i in len(token.data):
+                if token.data[i] not in ["\n", "\r", "\f", "\t", " "]:
+                    return False
+            return True
+        return False
 
     def handle_rcdata(self, token, tree_builder):
-        pass
+        tree_builder.insert(token)
+        tree_builder.tokeniser.move(token_state.RCDATA)
+        tree_builder.mark_insertion()
+        tree_builder.move(TEXT)
 
     def handle_rawtext(self, token, tree_builder):
-        pass
+        tree_builder.insert(token)
+        tree_builder.tokeniser.move(token_state.RAWTEXT)
+        tree_builder.mark_insertion()
+        tree_builder.move(TEXT)
+
 
     def any_other_end_tag(self, token, tree_builder):
-        pass
+        name = token.tag_lc_name
+        stack = tree_builder.stack
+        for i in range(len(stack)):
+            n = stack[len(stack) - 1 - i]
+            if n.name == name:
+                tree_builder.generate_implied_end(name)
+                tree_builder.pop_stack_to_close(name)
+                break
+            else:
+                if tree_builder.is_special(n):
+                    return False
+        return True
+
 
 
 class InitialState(State):
@@ -653,7 +677,13 @@ class InTableState(State):
         return self.anything_else(token, tree_builder)
 
     def anything_else(self, token, tree_builder):
-        pass
+        if tree_builder.current_element.name in ["table", "tbody", "tfoot", "thead", "tr"]:
+            tree_builder.set_foster_inserts(True)
+            processed = tree_builder.process_token(token, IN_BODY)
+            tree_builder.set_foster_inserts(False)
+        else:
+            processed = tree_builder.process_token(token, IN_BODY)
+        return processed
 
 
 class InCaptionState(State):
@@ -982,6 +1012,12 @@ class InColumnGroupState(State):
             return self.anything_else(token, tree_builder)
         else:
             return self.anything_else(token, tree_builder)
+        return True
+
+    def anything_else(self, token, tree_builder):
+        processed = tree_builder.process_end("colgroup")
+        if processed:
+            return tree_builder.process_token(token)
         return True
 
 
