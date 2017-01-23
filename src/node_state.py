@@ -2,6 +2,7 @@ import node
 from abc import ABCMeta
 import token as t
 import token_state
+import html_tag as ht
 
 
 class State(object):
@@ -17,6 +18,9 @@ class State(object):
         pass
 
     def handle_rawtext(self, token, tree_builder):
+        pass
+
+    def any_other_end_tag(self, token, tree_builder):
         pass
 
 
@@ -80,13 +84,13 @@ class BeforeHeadState(State):
             tree_builder.move(IN_HEAD)
         elif token.type == t.TokenType.END_TAG and token.tag_lc_name in ["head", "html", "body", "br"]:
             tree_builder.process_start("head")
-            tree_builder.process(token)
+            tree_builder.process_token(token)
         elif token.type == t.TokenType.END_TAG:
             tree_builder.error("BeforeHeadState")
             return False
         else:
             tree_builder.process_start("head")
-            return tree_builder.process(token)
+            return tree_builder.process_token(token)
         return True
 
 
@@ -289,20 +293,208 @@ class InBodyState(State):
                 tree_builder.mark_insertion()
                 tree_builder.frameset(False)
                 tree_builder.move(TEXT)
+            elif name == "xmp":
+                if tree_builder.in_button_scope("p"):
+                    tree_builder.process_end("p")
+                tree_builder.reconstruct_formatting()
+                tree_builder.frameset(False)
+                self.handle_rawtext(token, tree_builder)
+            elif name == "iframe":
+                tree_builder.frameset(False)
+                self.handle_rawtext(token, tree_builder)
+            elif name == "noembed":
+                self.handle_rawtext(token, tree_builder)
+            elif name == "select":
+                tree_builder.reconstruct_formatting()
+                tree_builder.insert(token)
+                tree_builder.frameset(False)
+                state = tree_builder.state
+                if state == IN_TABLE or state == IN_CAPTION or state == IN_TABLE_BODY or state == IN_ROW or state == IN_CELL:
+                    tree_builder.move(IN_SELECT_IN_TABLE)
+                else:
+                    tree_builder.move(IN_SELECT)
+            elif name in ["optgroup", "option"]:
+                if tree_builder.current_element.name == "option":
+                    tree_builder.process_end("option")
+                tree_builder.reconstruct_formatting()
+                tree_builder.insert(token)
+            elif name in ["rp", "rt"]:
+                if tree_builder.in_scope("ruby"):
+                    tree_builder.generate_implied_end()
+                    if tree_builder.current_element.name == "ruby":
+                        tree_builder.error("InBodyState")
+                        tree_builder.pop_stack_to_before("ruby")
+                    tree_builder.insert(token)
+            elif name == "math":
+                tree_builder.reconstruct_formatting()
+                tree_builder.insert(token)
+                tree_builder.acknowledge_self_closing()
+            elif name == "svg":
+                tree_builder.reconstruct_formatting()
+                tree_builder.insert(token)
+                tree_builder.acknowledge_self_closing()
+            elif name in ["caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot",
+                          "th", "thead", "tr"]:
+                tree_builder.error("InBodyState")
+                return False
             else:
                 tree_builder.reconstruct_formatting()
                 tree_builder.insert(token)
         elif token.type == t.TokenType.END_TAG:
-            
-
-
-
-
-
-
-
-
-
+            name = token.tag_lc_name
+            if name in ["a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike",
+                        "strong", "tt", "u"]:
+                for i in range(8):
+                    el = tree_builder.get_active_formatting_el(name)
+                    if not el:
+                        return self.any_other_end_tag(token, tree_builder)
+                    elif tree_builder.on_stack(el):
+                        tree_builder.error("InBodyState")
+                        tree_builder.remove_from_active_formatting(el)
+                        return True
+                    elif tree_builder.in_scope(el.name):
+                        tree_builder.error("InBodyState")
+                        return False
+                    elif tree_builder.current_element != el:
+                        tree_builder.error("InBodyState")
+                    furthest_block = None
+                    common_anchestor = None
+                    seen_formatting = False
+                    stack = tree_builder.stack
+                    for i in range(min(len(stack), 64)):
+                        eel = stack[i]
+                        if eel == el:
+                            common_anchestor = stack[i - 1]
+                            seen_formatting = True
+                        elif seen_formatting and tree_builder.is_special(eel):
+                            furthest_block = eel
+                            break
+                    if not furthest_block:
+                        tree_builder.pop_stack_to_close(el.name)
+                        tree_builder.remove_from_active_formatting(el)
+                        return True
+                    n = furthest_block
+                    last = furthest_block
+                    for i in range(3):
+                        if tree_builder.on_stack(n):
+                            n = tree_builder.above_on_stack(n)
+                        if tree_builder.is_in_active_formatting(n):
+                            tree_builder.remove_from_stack(n)
+                            continue
+                        elif n == el:
+                            break
+                        replacement = node.Element(ht.Tag.value_of(n.name))
+                        n = replacement
+                        if last.parent:
+                            last.remove()
+                        n.append_child(last)
+                        last = n
+                    if common_anchestor.name in ["table", "tbody", "tfoot", "thead", "tr"]:
+                        if last.parent:
+                            last.remove()
+                        tree_builder.insert_in_foster_parent(last)
+                    else:
+                        if last.parent:
+                            last.remove()
+                        else:
+                            common_anchestor.append_child(last)
+                    adopter = node.Element(el.tag)
+                    adopter.attributes.attrs += el.attributes.attrs
+                    child_nodes = furthest_block.child_nodes
+                    for child_node in child_nodes:
+                        adopter.append_child(child_node)
+                    furthest_block.append_child(adopter)
+                    tree_builder.remove_from_active_formatting(el)
+                    tree_builder.remove_from_stack(el)
+                    tree_builder.insert_on_stack_after(furthest_block, adopter)
+            elif name in ["address", "article", "aside", "blockquote", "button", "center", "details", "dir", "div",
+                "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "menu",
+                "nav", "ol", "pre", "section", "summary", "ul"]:
+                if not tree_builder.in_scope(name):
+                    tree_builder.error("InBodyState")
+                    return False
+                else:
+                    tree_builder.generate_implied_end()
+                    if tree_builder.current_element.name != name:
+                        tree_builder.error("InBodyState")
+                    tree_builder.pop_stack_to_close(name)
+            elif name == "span":
+                return self.any_other_end_tag(token, tree_builder)
+            elif name == "li":
+                if not tree_builder.in_list_item_scope(name):
+                    tree_builder.error("InBodyState")
+                    return False
+                else:
+                    tree_builder.generate_implied_end(name)
+                    if tree_builder.current_element.name == name:
+                        tree_builder.error("InBodyState")
+                    tree_builder.pop_stack_to_close(name)
+            elif name == "body":
+                if not tree_builder.in_scope("body"):
+                    tree_builder.error("InBodyState")
+                    return False
+                else:
+                    tree_builder.move(AFTER_BODY)
+            elif name == "html":
+                not_ignored = tree_builder.process_end("body")
+                if not_ignored:
+                    return tree_builder.process_end(token)
+            elif name == "form":
+                current_form = tree_builder.get_form_elem()
+                tree_builder.set_form_elem(None)
+                if not current_form or not tree_builder.in_scope(name):
+                    tree_builder.error("InBodyState")
+                    return False
+                else:
+                    tree_builder.generate_implied_end()
+                    if tree_builder.current_element.name == name:
+                        tree_builder.error("InBodyState")
+                    tree_builder.remove_from_stack(current_form)
+            elif name == "p":
+                if tree_builder.in_button_scope(name):
+                    tree_builder.error("InBodyState")
+                    tree_builder.process_start(name)
+                    tree_builder.process_token(token)
+                else:
+                    tree_builder.generate_implied_end(name)
+                    if not tree_builder.current_element.name == name:
+                        tree_builder.error("InBodyState")
+                    tree_builder.pop_stack_to_close(name)
+            elif name in ["dd", "dt"]:
+                if not tree_builder.in_scope(name):
+                    tree_builder.error("InBodyState")
+                    return False
+                else:
+                    tree_builder.generate_implied_end(name)
+                    if not tree_builder.current_element.name == name:
+                        tree_builder.error("InBodyState")
+                    tree_builder.pop_stack_to_close(name)
+            elif name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
+                if tree_builder.in_scope(["h1", "h2", "h3", "h4", "h5", "h6"]):
+                    tree_builder.error("InBodyState")
+                    return False
+                else:
+                    tree_builder.generate_implied_end(name)
+                    if not tree_builder.current_element.name == name:
+                        tree_builder.error("InBodyState")
+                    tree_builder.pop_stack_to_close(["h1", "h2", "h3", "h4", "h5", "h6"])
+            elif name in ["applet", "marquee", "object"]:
+                if not tree_builder.in_scope("name"):
+                    if not tree_builder.in_scope(name):
+                        tree_builder.error("InBodyState")
+                        return False
+                    tree_builder.generate_implied_end()
+                    if not tree_builder.current_element.name == name:
+                        tree_builder.error("InBodyState")
+                    tree_builder.pop_stack_to_close(name)
+                    tree_builder.clear_formatting_to_last_marker()
+            elif name == "br":
+                tree_builder.error("InBodyState")
+                tree_builder.process_start("br")
+                return False
+            else:
+                return self.any_other_end_tag(token, tree_builder)
+        return True
 
 
 class InHeadNoScriptState(State):
@@ -310,7 +502,7 @@ class InHeadNoScriptState(State):
         if token.type == t.TokenType.DOCTYPE:
             tree_builder.error("BeforeHeadState")
         elif token.type == t.TokenType.START_TAG and token.tag_lc_name == "html":
-            return tree_builder.process(token, IN_BODY)
+            return tree_builder.process_token(token, IN_BODY)
         elif token.type == t.TokenType.END_TAG and token.tag_lc_name == "noscript":
             tree_builder.pop()
             tree_builder.move(IN_HEAD)
@@ -336,7 +528,18 @@ class InHeadNoScriptState(State):
 
 
 class TextState(State):
-    pass
+    def process_token(self, token, tree_builder):
+        if token.type == t.TokenType.CHARACTER:
+            tree_builder.insert(token)
+        elif token.type == t.TokenType.EOF:
+            tree_builder.error("TextState")
+            tree_builder.pop()
+            tree_builder.move(tree_builder.original_state)
+            return tree_builder.process_token(token)
+        elif token.type == t.TokenType.END_TAG:
+            tree_builder.pop()
+            tree_builder.move(tree_builder.original_state)
+        return True
 
 
 class AfterHeadState(State):
@@ -391,6 +594,34 @@ class InTableState(State):
     pass
 
 
+class InCaptionState(State):
+    pass
+
+
+class InRowState(State):
+    pass
+
+
+class InCellState(State):
+    pass
+
+
+class InFramesetState(State):
+    pass
+
+
+class InSelectState(State):
+    pass
+
+
+class InSelectInTableState(State):
+    pass
+
+
+class InTableBodyState(State):
+    pass
+
+
 INITIAL = InitialState()
 BEFORE_HTML = BeforeHtmlState()
 BEFORE_HEAD = BeforeHeadState()
@@ -400,3 +631,10 @@ IN_HEAD_NOSCRIPT = InHeadNoScriptState()
 TEXT = TextState()
 AFTER_HEAD = AfterHeadState()
 IN_TABLE = InTableState()
+IN_CAPTION = InCaptionState()
+IN_ROW = InRowState()
+IN_CELL = InCellState()
+IN_FRAMESET = InFramesetState()
+IN_SELECT = InSelectState()
+IN_SELECT_IN_TABLE = InSelectInTableState()
+IN_TABLE_BODY = InTableBodyState()
