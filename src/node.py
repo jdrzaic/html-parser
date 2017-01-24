@@ -151,6 +151,9 @@ class Element(Node):
             self.tag = tag
             self.attributes = attributes or atr.Attributes()
 
+    def node_name(self):
+        return self.tag.tag_lc_name
+
 
 
 class QuirksMode(object):
