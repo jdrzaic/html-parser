@@ -103,12 +103,14 @@ class BeforeHeadState(State):
             tree_builder.error("BeforeHeadState")
             return False
         elif token.type == t.TokenType.START_TAG and token.tag_lc_name == "html":
+            return IN_BODY.process_token(token, tree_builder)
+        elif token.type == t.TokenType.START_TAG and token.tag_lc_name == "head":
             head = tree_builder.insert(token)
             tree_builder.set_head(head)
             tree_builder.move(IN_HEAD)
         elif token.type == t.TokenType.END_TAG and token.tag_lc_name in ["head", "html", "body", "br"]:
             tree_builder.process_start("head")
-            tree_builder.process_token(token)
+            return tree_builder.process_token(token)
         elif token.type == t.TokenType.END_TAG:
             tree_builder.error("BeforeHeadState")
             return False
@@ -121,6 +123,7 @@ class BeforeHeadState(State):
 class InHeadState(State):
 
     def process_token(self, token, tree_builder):
+        print token
         if self.is_white(token):
             tree_builder.insert(token)
             return True

@@ -154,6 +154,9 @@ class Element(Node):
     def node_name(self):
         return self.tag.tag_lc_name
 
+    def append_child(self, node):
+        pass
+
 
 
 class QuirksMode(object):

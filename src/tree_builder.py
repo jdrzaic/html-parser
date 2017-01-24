@@ -32,7 +32,6 @@ class TreeBuilder(object):
     def parse(self):
         while True:
             curr_token = self.tokeniser.read()
-            print curr_token
             self.process_token(curr_token)
             finished = False
             if curr_token.type == t.TokenType.EOF:
@@ -67,7 +66,7 @@ class TreeBuilder(object):
 
     def insert(self, token):
         if isinstance(token, node.Element):
-            self.insert_elem(token)
+            return self.insert_elem(token)
         if token.type == t.TokenType.START_TAG:
             self.insert_start_tag(token)
         elif token.type == t.TokenType.COMMENT:
@@ -111,7 +110,7 @@ class TreeBuilder(object):
         self.current_element().append_child(n)
 
     def insert_start(self, token):
-        new_start = node.Element(tag=html_tag.Tag.value_of(token.tag_lc_name))
+        new_start = node.Element(tag=html_tag.Tag.value_of(token))
         self.insert(new_start)
         return new_start
 
