@@ -193,7 +193,7 @@ class InBodyState(State):
         elif token.type == t.TokenType.START_TAG:
             name = token.tag_lc_name
             if name == "a":
-                if tree_builder.active_formatting_elem():
+                if tree_builder.active_formatting_elem("a"):
                     tree_builder.error("InBodyState")
                     tree_builder.process_end("a")
                     remaining_a = tree_builder.get_from_stack("a")
@@ -494,7 +494,7 @@ class InBodyState(State):
                         tree_builder.error("InBodyState")
                     tree_builder.pop_stack_to_close(name)
             elif name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
-                if tree_builder.in_scope(["h1", "h2", "h3", "h4", "h5", "h6"]):
+                if tree_builder.in_scope_list(["h1", "h2", "h3", "h4", "h5", "h6"]):
                     tree_builder.error("InBodyState")
                     return False
                 else:

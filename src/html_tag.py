@@ -43,6 +43,8 @@ SPECIAL_TAGS = ["address", "applet", "area", "article", "aside", "base", "basefo
             "section", "select", "style", "summary", "table", "tbody", "td", "textarea", "tfoot", "th", "thead",
             "title", "tr", "ul", "wbr", "xmp"]
 
+IN_SCOPE_TAGS = ["applet", "caption", "html", "table", "td", "th", "marquee", "object"]
+
 
 class Tag(object):
 

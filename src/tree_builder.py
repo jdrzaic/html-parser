@@ -17,7 +17,7 @@ class TreeBuilder(object):
         self.head_elem = None
         self.form_elem = None
         self.formatting_elems = []
-        self.original_state = None #what?
+        self.original_state = None
         self.stack = []
         self.tokeniser = tokeniser.Tokeniser(self.reader, self.errors)
         self.pending_table_chars = []
@@ -159,10 +159,43 @@ class TreeBuilder(object):
         return False
 
     def reconstruct_formatting(self):
-        pass
+        last = self.last_formatting_element()
+        if not last or self.on_stack(last):
+            return
+        entry = last
+        skip = False
+        formatting_num = len(self.formatting_elems)
+        pos = formatting_num - 1
+        while True:
+            if not pos:
+                skip = True
+                break
+            pos -= 1
+            entry = self.formatting_elems[pos]
+            if not entry or self.on_stack(entry):
+                break
+        while True:
+            if not skip:
+                pos += 1
+                entry = self.formatting_elems[pos]
+            skip = False
+            new_elem = self.insert_start(entry.node_name())
+            new_elem.attributes.attrs = dict(
+                new_elem.attributes.attrs.items() + entry.attributes.attrs.items())
+            self.formatting_elems[pos] = new_elem
+            if pos == formatting_num - 1:
+                break
+
+    def last_formatting_element(self):
+        return self.formatting_elems[len(self.formatting_elems) - 1] if self.formatting_elems else None
+
 
     def active_formatting_elem(self):
-        pass
+        size = len(self.formatting_elems)
+        for i in range(size):
+    #        next_el = TODO stopped here
+            pass
+
 
     def get_from_stack(self, name):
         for i in range(len(self.stack)):
@@ -171,17 +204,32 @@ class TreeBuilder(object):
                 return next_
         return None
 
-    def remove_from_active_formatting(self, obj):
-        pass
+    def remove_from_active_formatting(self, el):
+        size = len(self.formatting_elems)
+        for i in range(size):
+            next_el = self.formatting_elems[size - i - 1]
+            if next_el == el:
+                self.formatting_elems.pop(size - i - 1)
+                break
+
 
     def mark_insertion(self):
         self.original_state = self.state
 
-    def generate_implied_end(self, name):
-        pass
+    def generate_implied_end(self, ex_tag=None):
+        while ex_tag and not self.current_element().node_name() == ex_tag and \
+            self.current_element().node_name() in [
+                    "dd", "dt", "li", "option", "optgroup", "p", "rp", "rt"]:
+            self.pop()
 
-    def pop_stack_to_close(self, name):
-        pass
+    def pop_stack_to_close(self, *args):
+        size = len(self.stack)
+        for i in range(size):
+            pos = size - 1 - i
+            next_el = self.stack[pos]
+            self.stack.pop(pos)
+            if next_el.node_name() in args:
+                break
 
     def is_special(self, n):
         return n.name in html_tag.SPECIAL_TAGS
@@ -196,7 +244,22 @@ class TreeBuilder(object):
         pass
 
     def in_scope(self, name):
-        pass
+        return self.in_scope_list([name])
+
+    def in_scope_list(self, names, base_tags, extra_tags=None):
+        size = len(self.stack)
+        for i in range(size):
+            pos = size - i - 1
+            elem = self.stack[pos]
+            el_name = elem.node_name()
+            if el_name in names:
+                return True
+            if el_name in base_tags:
+                return False
+            if extra_tags and el_name in extra_tags:
+                return False
+        return False
+
 
     def insert_form(self, token):
         pass
@@ -204,8 +267,15 @@ class TreeBuilder(object):
     def insert_marker_to_formatting(self):
         self.formatting_elems.append(None)
 
-    def pop_stack_to_before(self):
-        pass
+    def pop_stack_to_before(self, name):
+        size = len(self.stack)
+        for i in range(size):
+            pos = size - 1 - i
+            next_el = self.stack[pos]
+            if next_el.node_name() == name:
+                break
+            else:
+                self.stack.remove(pos)
 
     def acknowledge_self_closing(self):
         pass
@@ -214,10 +284,15 @@ class TreeBuilder(object):
         pass
 
     def on_stack(self, name):
-        pass
+        return name in self.stack
 
     def above_on_stack(self, n):
-        pass
+        size = len(self.stack)
+        for i in range(size):
+            next_el = self.stack[size - 1 - i]
+            if n == next_el:
+                return self.stack[size - 2 - i]
+        return None
 
     def is_in_active_formatting(self, n):
         pass
@@ -226,7 +301,10 @@ class TreeBuilder(object):
         pass
 
     def insert_on_stack_after(self, first, second):
-        pass
+        size = len(self.stack)
+        for i in range(size):
+            if self.stack[size - 1 - i] == first:
+                self.stack.insert(size - i, second)
 
     def in_list_item_scope(self, name):
         pass
@@ -238,10 +316,20 @@ class TreeBuilder(object):
         self.form_elem = elem
 
     def clear_formatting_to_last_marker(self):
-        pass
+        while self.formatting_elems:
+            elem = self.remove_last_formatting_element()
+            if not elem:
+                break
+
+    def remove_last_formatting_element(self):
+        if self.formatting_elems:
+            elem = self.formatting_elems[len(self.formatting_elems) - 1]
+            self.formatting_elems.pop()
+            return elem
+        return None
 
     def new_pending_table_chars(self):
-        pass
+        self.pending_table_chars = []
 
     def clear_stack_to_table_context(self):
         self.clear_stack_to_context("table")
@@ -259,7 +347,41 @@ class TreeBuilder(object):
         pass
 
     def reset_insertion(self):
-        pass
+        last = False
+        for i in range(len(self.stack)):
+            pos = len(self.stack) - 1 - i
+            n = self.stack[pos]
+            name = n.node_name()
+            if name == "select":
+                self.move(ns.IN_SELECT)
+                break
+            elif not last and name == "th" or name == "td":
+                self.move(ns.IN_CELL)
+                break
+            elif name == "tr":
+                self.move(ns.IN_ROW)
+                break
+            elif name in ["tbody", "thead", "tfoot"]:
+                self.move(ns.IN_TABLE_BODY)
+                break
+            elif name == "caption":
+                self.move(ns.IN_CAPTION)
+                break
+            elif name == "colgroup":
+                self.move(ns.IN_COLUMN_GROUP)
+                break
+            elif name == "table":
+                self.move(ns.IN_TABLE)
+                break
+            elif name in ["head", "body"]:
+                self.move(ns.IN_BODY)
+                break
+            elif name == "frameset":
+                self.move(ns.IN_FRAMESET)
+                break
+            elif name == "html":
+                self.move(ns.BEFORE_HEAD)
+                break
 
     def clear_stack_to_table_body_context(self):
         self.clear_stack_to_context("tbody", "tfoot", "thead")
@@ -271,7 +393,6 @@ class TreeBuilder(object):
                 break
             else:
                 self.stack.pop(len(self.stack) - i - 1)
-
 
     def current_element(self):
         return self.stack[len(self.stack) - 1] if self.stack else None
