@@ -33,6 +33,11 @@ class DoctypeToken(Token):
         self.type = TokenType.DOCTYPE
         self.force_quirks = False
 
+    def __str__(self):
+        doc_str = "<!DOCTYPE " + "PUBLIC \"{0}\"".format(self.public_identifier) if self.public_identifier else ""
+        doc_str += " SYSTEM \"{0}\"".format(self.system_identifier) if self.system_identifier else ""
+        return doc_str + ">"
+
 
 class TagToken(Token):
     __metaclass__ = ABCMeta
@@ -47,6 +52,9 @@ class TagToken(Token):
         self.is_empty_attr_value = False
         self.is_self_closing = False
         self.attrs = attributes.Attributes()
+
+    def name(self):
+        return self.tag_lc_name
 
     def new_attribute(self):
         if self.pending_attr_name.strip():
@@ -111,6 +119,7 @@ class CommentToken(Token):
         super(CommentToken, self).__init__()
         self.data = ''
         self.bogus = False
+        self.type = TokenType.COMMENT
 
     def __str__(self):
         return "<!--" + self.data + "-->"

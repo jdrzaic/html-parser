@@ -1172,7 +1172,7 @@ class BeforeDoctypePublicIdState(State):
 class DoctypePublicIdDoubleQuotedState(State):
     def read(self, reader, tokeniser):
         read_c = reader.consume()
-        if read_c == "'":
+        if read_c == '"':
             tokeniser.move(AFTER_DOCTYPE_PUBLIC_ID)
         elif read_c == NULL_CHAR:
             tokeniser.error("DoctypePublicIdDoubleQuotedState")
@@ -1194,7 +1194,7 @@ class DoctypePublicIdDoubleQuotedState(State):
 class DoctypePublicIdSingleQuotedState(State):
     def read(self, reader, tokeniser):
         read_c = reader.consume()
-        if read_c == '"':
+        if read_c == "'":
             tokeniser.move(AFTER_DOCTYPE_PUBLIC_ID)
         elif read_c == NULL_CHAR:
             tokeniser.error("DoctypePublicIdSingleQuotedState")
@@ -1211,7 +1211,6 @@ class DoctypePublicIdSingleQuotedState(State):
             tokeniser.move(DATA)
         else:
             tokeniser.doctype_pending.public_identifier += read_c
-
 
 
 class AfterDoctypePublicIdState(State):

@@ -13,6 +13,7 @@ builder = tree_builder.TreeBuilder("www.index.com", """<!DOCTYPE HTML PUBLIC "-/
 
 <h1 key='value' key2>My First Heading</h1>
 <script></script>
+<div><p class="aaa"></p></div>
 <p key="value" key2=value2>My first paragraph.</p>
 <!-- komentaaar -->
 

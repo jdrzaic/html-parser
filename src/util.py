@@ -90,9 +90,9 @@ class Reader(object):
 
     def match_seq_ic(self, seq):
         input_lc = self.input.lower()
-        seq_lc = seq.lower
+        seq_lc = seq.lower()
         for i in range(len(seq)):
-            if seq[i] != input_lc[self.current_pos + i]:
+            if seq_lc[i] != input_lc[self.current_pos + i]:
                 return False
         self.current_pos += len(seq)
         return True

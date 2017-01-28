@@ -45,6 +45,16 @@ SPECIAL_TAGS = ["address", "applet", "area", "article", "aside", "base", "basefo
 
 IN_SCOPE_TAGS = ["applet", "caption", "html", "table", "td", "th", "marquee", "object"]
 
+LIST_TAGS = ["ol", "ul"]
+
+BUTTON_TAGS = ["button"]
+
+TABLE_TAGS = ["html", "table"]
+
+SELECT_TAGS = ["optgroup", "option"]
+
+
+
 
 class Tag(object):
 

@@ -56,7 +56,7 @@ class InitialState(State):
             tree_builder.insert(token)
         elif token.type == t.TokenType.DOCTYPE:
             document_type = node.DocumentType(
-                token.tag_name, token.public_identifier, token.system_identifier, token.sys_key)
+                token.tag_lc_name, token.public_identifier, token.system_identifier, token.sys_key)
             tree_builder.doc.append_child(document_type)
             if token.force_quirks:
                 tree_builder.doc.quirks_mode = node.QuirksMode.QUIRKS
@@ -310,7 +310,7 @@ class InBodyState(State):
                 tree_builder.frameset(False)
             elif name == "image":
                 if not tree_builder.get_from_stack("svg"):
-                    token.tag_name = "img"
+                    token.tag_lc_name = "img"
                     return tree_builder.process_token(token)
                 else:
                     tree_builder.insert(token)
@@ -355,11 +355,11 @@ class InBodyState(State):
             elif name == "math":
                 tree_builder.reconstruct_formatting()
                 tree_builder.insert(token)
-                tree_builder.acknowledge_self_closing()
+                tree_builder.tokeniser.acknowledge_self_closing()
             elif name == "svg":
                 tree_builder.reconstruct_formatting()
                 tree_builder.insert(token)
-                tree_builder.acknowledge_self_closing()
+                tree_builder.tokeniser.acknowledge_self_closing()
             elif name in ["caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot",
                           "th", "thead", "tr"]:
                 tree_builder.error("InBodyState")

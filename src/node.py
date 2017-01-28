@@ -32,6 +32,23 @@ class Node(object):
             curr = curr.parent
         return curr
 
+    def add_children(self, index, nodes):
+        for child in nodes:
+            self.reparent(child)
+            self.children.insert(index, child)
+            self.reindex(index)
+
+    def remove_child(self, out):
+        if not out.parent == self:
+            return
+        self.children.pop(out.sibling_ind)
+        self.reindex(out.sibling_ind)
+        out.parent = None
+
+    def before(self, node):
+        self.parent.add_children(self.sibling_ind, [node])
+        return self
+
     def remove(self):
         if not self.parent:
             return False
@@ -57,6 +74,15 @@ class Node(object):
 
     def name(self):
         return "#node"
+
+    def reparent(self, node):
+        if node.parent:
+            node.parent.remove_child(node)
+        node.parent = self
+
+    def reindex(self, index):
+        for i in range(index, len(self.children)):
+            self.children[i].sibling_ind = i
 
 
 class Comment(Node):
@@ -155,8 +181,9 @@ class Element(Node):
         return self.tag.tag_lc_name
 
     def append_child(self, node):
-        pass
-
+        self.reparent(node)
+        self.children.append(node)
+        node.sibling_ind = len(self.children) - 1
 
 
 class QuirksMode(object):
