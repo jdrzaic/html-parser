@@ -174,8 +174,8 @@ class Element(Node):
                 super(Element, self).__init__(atr.Attributes())
                 self.tag = tag
         else:
+            super(Element, self).__init__(attributes or atr.Attributes())
             self.tag = tag
-            self.attributes = attributes or atr.Attributes()
 
     def node_name(self):
         return self.tag.tag_lc_name

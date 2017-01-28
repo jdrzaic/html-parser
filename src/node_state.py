@@ -13,7 +13,7 @@ class State(object):
 
     def is_white(self, token):
         if token.type == t.TokenType.CHARACTER:
-            for i in len(token.data):
+            for i in range(len(token.data)):
                 if token.data[i] not in ["\n", "\r", "\f", "\t", " "]:
                     return False
             return True

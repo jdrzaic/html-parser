@@ -111,7 +111,8 @@ class EndTagToken(TagToken):
     def __init__(self, name=''):
         super(EndTagToken, self).__init__()
         self.type = TokenType.END_TAG
-        self.name = name
+        self.tag_name = name
+        self.tag_lc_name = name.lower()
 
     def __str__(self):
         return "</" + self.tag_name + ">"

@@ -54,8 +54,6 @@ TABLE_TAGS = ["html", "table"]
 SELECT_TAGS = ["optgroup", "option"]
 
 
-
-
 class Tag(object):
 
     def __init__(self, tag_name):
