@@ -33,6 +33,9 @@ class DoctypeToken(Token):
         self.type = TokenType.DOCTYPE
         self.force_quirks = False
 
+    def name(self):
+        return self.name.lower()
+
     def __str__(self):
         doc_str = "<!DOCTYPE " + "PUBLIC \"{0}\"".format(self.public_identifier) if self.public_identifier else ""
         doc_str += " SYSTEM \"{0}\"".format(self.system_identifier) if self.system_identifier else ""
