@@ -178,7 +178,7 @@ class Element(Node):
             self.tag = tag
 
     def node_name(self):
-        return self.tag.tag_lc_name
+        return self.tag.tag_name
 
     def append_child(self, node):
         self.reparent(node)

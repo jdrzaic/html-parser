@@ -145,7 +145,7 @@ class Tokeniser(object):
         self.doctype_pending = t.DoctypeToken()
 
     def approptiate_end_tag_token(self):
-        return self.last_start_tag is not None and self.tag_pending.name.lower() == self.last_start_tag.lower()
+        return self.last_start_tag is not None and self.tag_pending.token_name() == self.last_start_tag.lower()
 
     def approptiate_end_tag_name(self):
         return self.last_start_tag

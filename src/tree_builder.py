@@ -103,7 +103,7 @@ class TreeBuilder(object):
             self.form_elem.add_element(n)
 
     def insert_char_token(self, ch):
-        tag_name = self.current_element().tag.tag_lc_name
+        tag_name = self.current_element().tag.tag_name
         if tag_name == "script" or tag_name == "style":
             n = node.Data(ch.data)
         else:
@@ -261,7 +261,7 @@ class TreeBuilder(object):
     def in_scope(self, name):
         return self.in_scope_list([name], html_tag.IN_SCOPE_TAGS)
 
-    def in_scope_list(self, names, base_tags, extra_tags=None):
+    def in_scope_list(self, names, base_tags=html_tag.IN_SCOPE_TAGS, extra_tags=None):
         size = len(self.stack)
         for i in range(size):
             pos = size - i - 1
