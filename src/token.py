@@ -33,7 +33,7 @@ class DoctypeToken(Token):
         self.type = TokenType.DOCTYPE
         self.force_quirks = False
 
-    def name(self):
+    def token_name(self):
         return self.name.lower()
 
     def __str__(self):
@@ -56,7 +56,7 @@ class TagToken(Token):
         self.is_self_closing = False
         self.attrs = attributes.Attributes()
 
-    def name(self):
+    def token_name(self):
         return self.tag_lc_name
 
     def new_attribute(self):

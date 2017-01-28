@@ -1247,10 +1247,8 @@ class BetweenPubAndSysIdsState(State):
             tokeniser.emit_doctype_pending()
             tokeniser.move(DATA)
         elif read_c == '"':
-            tokeniser.error("BetweenPubAndSysIdsState")
             tokeniser.move(DOCTYPE_SYSTEM_ID_DOUBLE_QUOTED)
         elif read_c == "'":
-            tokeniser.error("BetweenPubAndSysIdsState")
             tokeniser.move(DOCTYPE_SYSTEM_ID_SINGLE_QUOTED)
         elif read_c == reader.EOF:
             tokeniser.eof_error("BetweenPubAndSysIdsState")
