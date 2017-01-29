@@ -28,6 +28,7 @@ class TreeBuilder(object):
         self.start = t.StartTagToken("", at.Attributes())
         self.end = t.EndTagToken()
         self.specific_scope_tar = [None]
+        self.base_url = ""
 
     def parse(self):
         while True:
@@ -458,6 +459,9 @@ class TreeBuilder(object):
 
     def current_element(self):
         return self.stack[len(self.stack) - 1] if self.stack else None
+
+    def set_base_url(self, url):
+        self.base_url = url
 
     def __str__(self):
         return "current_token={0}\ncurrent_element={1}\nstate={2}".format(
