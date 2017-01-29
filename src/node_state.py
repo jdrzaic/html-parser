@@ -278,7 +278,7 @@ class InBodyState(State):
                     tree_builder.reconstruct_formatting()
                     tree_builder.insert(token)
                     tree_builder.frameset(False)
-            elif name in ["b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u"]:
+            elif name in ["b", "big", "code", "em", "font", "i", "s", "small", "sup", "strike", "strong", "tt", "u"]:
                 tree_builder.reconstruct_formatting()
                 tree_builder.insert_empty(token)
                 tree_builder.frameset(False)
@@ -367,7 +367,7 @@ class InBodyState(State):
         elif token.type == t.TokenType.END_TAG:
             name = token.token_name()
             if name in ["a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike",
-                        "strong", "tt", "u"]:
+                        "strong", "sup", "tt", "u"]:
                 for i in range(8):
                     el = tree_builder.get_active_formatting_el(name)
                     if not el:

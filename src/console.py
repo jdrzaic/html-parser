@@ -234,8 +234,21 @@ ex16 = """
 </body>
 </html>
 """
+
+ex17 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<p>This is <sup>superscripted</sup> text.</p>
+
+</body>
+</html>
+"""
+
+
 def main():
-    html_string = ex16
+    html_string = ex17
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "-f":
         filename = args[1]
