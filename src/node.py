@@ -74,11 +74,14 @@ class Node(object):
 
     def get_attributes(self):
         attrs = self.attributes.attrs.values()
-        node_html = "\n"
+        node_html = ""
         for attribute in attrs:
-            node_html = "{0}\n{1}\nKey: {2}, Value: {3}\n".format(
-                node_html, "Attribute:", attribute.key, attribute.value
-            )
+            if isinstance(attribute, atr.BoolAttribute):
+                node_html = "{0}{1}\nKey: {2}\n".format(node_html, "Attribute:", attribute.key)
+            else:
+                node_html = "{0}{1}\nKey: {2}, Value: {3}\n".format(
+                    node_html, "Attribute:", attribute.key, attribute.value
+                )
         return node_html
 
 
@@ -181,10 +184,10 @@ class Text(Node):
         return Text(text)
 
     def get_html(self):
-        node_html = "\n"
+        node_html = ""
         if not SHOW_WHITESPACE_NODE and self.get_normalized() == " ":
             return node_html
-        node_html = "Text Node:\nData: {0}\n".format(self.text)
+        node_html = "\nText Node:\nData: {0}\n".format(self.text)
         return node_html
 
 
