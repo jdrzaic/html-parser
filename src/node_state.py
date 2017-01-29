@@ -174,7 +174,6 @@ class InHeadState(State):
 
 class InBodyState(State):
     def process_token(self, token, tree_builder):
-        print token
         if token.type == t.TokenType.CHARACTER:
             if not token.data:
                 return False
@@ -288,7 +287,8 @@ class InBodyState(State):
                 tree_builder.insert_marker_to_formatting()
                 tree_builder.frameset()
             elif name == "table":
-                if tree_builder.doc.quirks_mode != node.QuirksMode.QUIRKS and tree_builder.in_button_scope("p"):
+                print "idem u tablicu"
+                if tree_builder.doc.force_quirks != node.QuirksMode.QUIRKS and tree_builder.in_button_scope("p"):
                     tree_builder.process_end("p")
                 tree_builder.insert(token)
                 tree_builder.frameset(False)

@@ -62,7 +62,7 @@ class Tokeniser(object):
         self.chars_string += str
 
     def error(self, state):
-        print(state)
+        print("error in state: {0}".format(state))
         self.errors.append(state)
 
     def eof_error(self, token):

@@ -246,9 +246,215 @@ ex17 = """
 </html>
 """
 
+ex18 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<p>The <abbr title="World Health Organization">WHO</abbr> was founded in 1948.</p>
+
+<p>Marking up abbreviations can give useful information to browsers, translation systems and search-engines.</p>
+
+</body>
+</html>
+"""
+
+ex19 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<!-- This is a comment -->
+<p>This is a paragraph.</p>
+<!-- Comments are not displayed in the browser -->
+
+</body>
+</html>
+"""
+
+ex20 = """
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {background-color: powderblue;}
+h1   {color: blue;}
+p    {color: red;}
+</style>
+</head>
+<body>
+
+<h1>This is a heading</h1>
+<p>This is a paragraph.</p>
+
+</body>
+</html>
+"""
+
+ex21 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<p><a href="html_images.asp">HTML Images</a> is a link to a page on this website.</p>
+
+<p><a href="http://www.w3.org/">W3C</a> is a link to a website on the World Wide Web.</p>
+
+</body>
+</html>
+"""
+
+ex22 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<img src="html5.gif" alt="HTML5 Icon" width="128" height="128">
+
+</body>
+</html>
+"""
+
+ex23 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>HTML Tables</h2>
+
+<p>HTML tables start with a table tag.</p>
+<p>Table rows start with a tr tag.</p>
+<p>Table data start with a td tag.</p>
+
+<hr>
+<h2>1 Column:</h2>
+
+<table>
+  <tr>
+    <td>100</td>
+  </tr>
+</table>
+
+<hr>
+<h2>1 Row and 3 Columns:</h2>
+<table>
+  <tr>
+    <td>100</td>
+    <td>200</td>
+    <td>300</td>
+  </tr>
+</table>
+
+<hr>
+<h2>3 Rows and 3 Columns:</h2>
+<table>
+  <tr>
+    <td>100</td>
+    <td>200</td>
+    <td>300</td>
+  </tr>
+  <tr>
+    <td>400</td>
+    <td>500</td>
+    <td>600</td>
+  </tr>
+  <tr>
+    <td>700</td>
+    <td>800</td>
+    <td>900</td>
+  </tr>
+</table>
+
+<hr>
+
+</body>
+</html>
+"""
+
+ex24 = """
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 5px;
+}
+</style>
+</head>
+<body>
+
+<table style="width:100%">
+  <tr>
+    <th>Firstname</th>
+    <th>Lastname</th>
+    <th>Age</th>
+  </tr>
+  <tr>
+    <td>Jill</td>
+    <td>Smith</td>
+    <td>50</td>
+  </tr>
+  <tr>
+    <td>Eve</td>
+    <td>Jackson</td>
+    <td>94</td>
+  </tr>
+  <tr>
+    <td>John</td>
+    <td>Doe</td>
+    <td>80</td>
+  </tr>
+</table>
+
+</body>
+</html>
+"""
+
+ex25 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>An ordered HTML list</h2>
+
+<ol>
+  <li>Coffee</li>
+  <li>Tea</li>
+  <li>Milk</li>
+</ol>
+
+</body>
+</html>
+"""
+
+ex26 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>A Nested List</h2>
+
+<ul>
+  <li>Coffee</li>
+  <li>Tea
+    <ul>
+    <li>Black tea</li>
+    <li>Green tea</li>
+    </ul>
+  </li>
+  <li>Milk</li>
+</ul>
+
+</body>
+</html>
+"""
 
 def main():
-    html_string = ex17
+    html_string = ex25
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "-f":
         filename = args[1]
