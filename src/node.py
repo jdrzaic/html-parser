@@ -12,7 +12,8 @@ DATA_KEY = "data"
 PUB_SYS_KEY = "pub_sys"
 PUBLIC_ID = "public_id"
 SYSTEM_ID = "system_id"
-
+# Whether to show whitespace nodes or not
+SHOW_WHITESPACE_NODE = False
 
 class Node(object):
     __metaclass__ = ABCMeta
@@ -66,6 +67,20 @@ class Node(object):
         for i in range(index, len(self.children)):
             self.children[i].sibling_ind = i
 
+    def indent(self, to_indend, depth=0):
+        offset = depth * "\t"
+        indeneted = offset + to_indend.replace("\n", "\n" + offset)
+        return indeneted
+
+    def get_attributes(self):
+        attrs = self.attributes.attrs.values()
+        node_html = ""
+        for attribute in attrs:
+            node_html = "{0}\n{1}\nKey: {2}, Value: {3}\n".format(
+                node_html, "Attribute:", attribute.key, attribute.value
+            )
+        return node_html
+
 
 class Comment(Node):
     def __init__(self, data):
@@ -76,6 +91,9 @@ class Comment(Node):
 
     def name(self):
         return "#comment"
+
+    def get_html(self, depth=0):
+        return "Comment:\nData: {0}\n".format(self.data)
 
 
 class Data(Node):
@@ -92,6 +110,9 @@ class Data(Node):
     def name(self):
         return "#data"
 
+    def get_html(self, depth=0):
+        return "Data:\nData: {0}\n".format(self.attributes.attrs[DATA_KEY])
+
 
 class DocumentType(Node):
     def __init__(self, name, public_id, system_id, pub_sys=None):
@@ -107,6 +128,19 @@ class DocumentType(Node):
 
     def name(self):
         return "#documenttype"
+
+    def get_html(self, depth=0):
+        node_html = self.name
+        keys = []
+        if self.attributes.attrs["public_id"]:
+            node_html = "{0}\Attribute:\nKey: PUBLIC, Value: {1}\n".format(
+                node_html, self.attributes.attrs["public_id"]
+            )
+        elif self.attributes.attrs["system_id"]:
+            node_html = "{0}\Attribute:\nKey: SYSTEM, Value: {1}\n".format(
+                node_html, self.attributes.attrs["system_id"]
+            )
+        return node_html
 
 
 class Text(Node):
@@ -146,6 +180,15 @@ class Text(Node):
         text = ce.Entities.unescape(text, False)
         return Text(text)
 
+    def get_html(self):
+        node_html = ""
+        if not SHOW_WHITESPACE_NODE and self.get_normalized() == " ":
+            return node_html
+        node_html = "Text:\nData: {0}\n".format(self.text)
+        return node_html
+
+
+
 
 class Element(Node):
     def __init__(self, tag_name=None, tag=None, attributes=None):
@@ -167,6 +210,13 @@ class Element(Node):
         self.children.append(node)
         node.sibling_ind = len(self.children) - 1
 
+    def get_html(self, depth=0):
+        node_html = "Element:\nName: {0}\n".format(self.tag.tag_name())
+        node_html = "{0}{1}".format(node_html, self.get_attributes())
+        for child in self.children:
+            node_html = "{0}{1}".format(node_html, self.indent(child.get_html(), 1))
+        return node_html
+
 
 class QuirksMode(object):
     NO_QUIRKS = 0
@@ -181,6 +231,13 @@ class Document(Element):
         self.force_quirks = QuirksMode.NO_QUIRKS
 
 
+    def get_html(self, depth=0):
+        node_html = "Document:\n"
+        node_html = "{0}{1}".format(node_html, self.get_attributes())
+        for child in self.children:
+            node_html = "{0}{1}".format(node_html, self.indent(child.get_html(), 1))
+        return node_html
+
 class FormElement(Element):
     def __init__(self, tag, attributes):
         super(FormElement, self).__init__(tag=tag, attributes=attributes)
@@ -189,3 +246,12 @@ class FormElement(Element):
     def add_element(self, node):
         self.elements.append(node)
         return self
+
+    def get_html(self, depth=0):
+        node_html = "FormElement:\n"
+        node_html = "{0}{1}".format(node_html, self.get_attributes())
+        for child in self.children:
+            node_html = "{0}{1}".format(node_html, self.indent(child.get_html(), 1))
+        for element in self.elements:
+            node_html = "{0}{1}".format(node_html, self.indent(element.get_html(), 1))
+        return node_html
