@@ -160,12 +160,15 @@ ex11 = """
 <body>
 
 <p>The HTML head element contains meta data.</p>
-<p>Meta data is data about the HTML document.</p>
-
+<ul>
+<li>
+ndndsfbs
+</li>
+</ul>
 </body>
 </html>
 """
 # fill with existing html tags
 html_tag.initialize_tags()
-builder = tree_builder.TreeBuilder(ex10)
+builder = tree_builder.TreeBuilder(ex11)
 builder.parse()

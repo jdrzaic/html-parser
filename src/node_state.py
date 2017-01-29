@@ -174,6 +174,7 @@ class InHeadState(State):
 
 class InBodyState(State):
     def process_token(self, token, tree_builder):
+        print token
         if token.type == t.TokenType.CHARACTER:
             if not token.data:
                 return False
@@ -219,7 +220,7 @@ class InBodyState(State):
                 tree_builder.frameset()
                 stack = tree_builder.stack
                 for i in range(len(stack)):
-                    el = stack.get(len(stack) - 1 - i)
+                    el = stack[len(stack) - 1 - i]
                     if el.node_name() == "li":
                         tree_builder.process_end("li")
                         break
@@ -449,7 +450,7 @@ class InBodyState(State):
                     return False
                 else:
                     tree_builder.generate_implied_end(name)
-                    if tree_builder.current_element().node_name() == name:
+                    if tree_builder.current_element().node_name() != name:
                         tree_builder.error("InBodyState")
                     tree_builder.pop_stack_to_close(name)
             elif name == "body":
