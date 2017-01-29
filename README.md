@@ -20,7 +20,7 @@ List item
 </html>
 """
 
-html_tag.initialize_tags()
-builder = tree_builder.TreeBuilder(html_string)
-builder.parse()
+html_tag.initialize_tags()  # add known HTML tags
+builder = tree_builder.TreeBuilder(html_string)  # create parser
+builder.parse()  # create DOM
 ```
