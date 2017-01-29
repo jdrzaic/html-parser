@@ -203,3 +203,7 @@ class FormElement(Element):
     def __init__(self, tag, attributes):
         super(FormElement, self).__init__(tag=tag, attributes=attributes)
         self.elements = []
+
+    def add_element(self, node):
+        self.elements.append(node)
+        return self

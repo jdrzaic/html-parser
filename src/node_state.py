@@ -295,7 +295,7 @@ class InBodyState(State):
             elif name == "input":
                 tree_builder.reconstruct_formatting()
                 el = tree_builder.insert_empty(token)
-                if not el.attributes.attrs["type"].lower() == "hidden":
+                if not el.attributes.attrs["type"].value.lower() == "hidden":
                     tree_builder.frameset(False)
             elif name in ["param", "source", "track"]:
                 tree_builder.insert_empty(token)

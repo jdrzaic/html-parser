@@ -71,7 +71,6 @@ ex5 = """
 </html>
 """
 
-# check <p> attributes, not printed
 ex6 = """
 <!DOCTYPE html>
 <html>
@@ -453,9 +452,208 @@ ex26 = """
 </html>
 """
 
+ex27 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<div style="background-color:black;color:white;padding:20px;">
+  <h2>London</h2>
+  <p>London is the capital city of England. It is the most populous city in the United Kingdom, with a metropolitan area of over 13 million inhabitants.</p>
+  <p>Standing on the River Thames, London has been a major settlement for two millennia, its history going back to its founding by the Romans, who named it Londinium.</p>
+</div>
+
+</body>
+</html>
+"""
+
+ex28 = """
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div.container {
+    width: 100%;
+    border: 1px solid gray;
+}
+
+header, footer {
+    padding: 1em;
+    color: white;
+    background-color: black;
+    clear: left;
+    text-align: center;
+}
+
+nav {
+    float: left;
+    max-width: 160px;
+    margin: 0;
+    padding: 1em;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+nav ul a {
+    text-decoration: none;
+}
+
+article {
+    margin-left: 170px;
+    border-left: 1px solid gray;
+    padding: 1em;
+    overflow: hidden;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<header>
+   <h1>City Gallery</h1>
+</header>
+
+<nav>
+  <ul>
+    <li><a href="#">London</a></li>
+    <li><a href="#">Paris</a></li>
+    <li><a href="#">Tokyo</a></li>
+  </ul>
+</nav>
+
+<article>
+  <h1>London</h1>
+  <p>London is the capital city of England. It is the most populous city in the  United Kingdom, with a metropolitan area of over 13 million inhabitants.</p>
+  <p>Standing on the River Thames, London has been a major settlement for two millennia, its history going back to its founding by the Romans, who named it Londinium.</p>
+</article>
+
+<footer>Copyright &copy; W3Schools.com</footer>
+
+</div>
+
+</body>
+</html>
+"""
+
+ex29 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<iframe src="demo_iframe.htm"></iframe>
+
+</body>
+</html>
+"""
+
+ex30 = """
+<!DOCTYPE html>
+<title>Page Title</title>
+
+<h1>This is a heading</h1>
+<p>This is a paragraph.</p>
+"""
+
+ex31 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<p id="demo"></p>
+
+<script>
+document.getElementById("demo").innerHTML = "Hello JavaScript!";
+</script>
+
+</body>
+</html>
+"""
+
+ex32 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<form>
+  <input type="radio" name="gender" value="male" checked> Male<br>
+  <input type="radio" name="gender" value="female"> Female<br>
+  <input type="radio" name="gender" value="other"> Other
+</form>
+<p>After form</p>
+
+</body>
+</html>
+"""
+
+ex33 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<p>
+Depending on browser support:<br>
+A date picker can pop-up when you enter the input field.
+</p>
+
+<form action="action_page.php">
+  Birthday (month and year):
+  <input type="month" name="bdaymonth">
+  <input type="submit">
+</form>
+
+<p><strong>Note:</strong> type="month" is not supported in Firefox, or Internet Explorer 11 and earlier versions.</p>
+
+</body>
+</html>
+"""
+
+ex34 = """
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+#div1 {
+    width: 350px;
+    height: 70px;
+    padding: 10px;
+    border: 1px solid #aaaaaa;
+}
+</style>
+<script>
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id);
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("text");
+    ev.target.appendChild(document.getElementById(data));
+}
+</script>
+</head>
+<body>
+
+<p>Drag the W3Schools image into the rectangle:</p>
+
+<div id="div1" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+<br>
+<img id="drag1" src="img_logo.gif" draggable="true" ondragstart="drag(event)" width="336" height="69">
+
+</body>
+</html>
+"""
+
 
 def main():
-    html_string = ex26
+    html_string = ex34
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "-f":
         filename = args[1]

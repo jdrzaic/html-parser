@@ -301,7 +301,7 @@ class TreeBuilder(object):
 
     def insert_form(self, token, on_stack=False):
         tag = html_tag.Tag.value_of(token.tag_lc_name)
-        form_el = node.FormElement(tag, token.attributes)
+        form_el = node.FormElement(tag, token.attrs)
         self.set_form_elem(form_el)
         self.insert_node(form_el)
         if on_stack:
