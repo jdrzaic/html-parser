@@ -32,8 +32,6 @@ class TreeBuilder(object):
     def parse(self):
         while True:
             curr_token = self.tokeniser.read()
-            print curr_token
-            print self.state
             self.process_token(curr_token)
             finished = False
             if curr_token.type == t.TokenType.EOF:

@@ -453,8 +453,9 @@ ex26 = """
 </html>
 """
 
+
 def main():
-    html_string = ex25
+    html_string = ex26
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "-f":
         filename = args[1]
