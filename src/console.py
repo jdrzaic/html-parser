@@ -169,9 +169,73 @@ List item
 </html>
 """
 
+ex12 = """
+<!DOCTYPE html>
+<html>
+<body>
 
+<p>I am normal</p>
+<p style="color:red;">I am red</p>
+<p style="color:blue;">I am blue</p>
+<p style="font-size:36px;">I am big</p>
+
+</body>
+</html>
+
+"""
+
+ex13 = """
+<!DOCTYPE html>
+<html>
+<body style="background-color:powderblue;">
+
+<h1>This is a heading</h1>
+<p>This is a paragraph.</p>
+
+</body>
+</html>
+"""
+
+ex14 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1 style="text-align:center;">Centered Heading</h1>
+<p style="text-align:center;">Centered paragraph.</p>
+
+</body>
+</html>
+"""
+
+ex15 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<p>This text is normal.</p>
+
+<p><b>This text is bold.</b>gshadhwhr<b>hsfhswhahd</b></p>
+
+</body>
+</html>
+"""
+
+ex16 = """
+<!DOCTYPE html>
+<html>
+<body>
+
+<p>This text is normal.</p>
+
+<p><em>This text is emphasized.</em></p>
+<p><b>This text is bold.</b>gshadhwhr<b>hsfhswhahd</b></p>
+
+</body>
+</html>
+"""
 def main():
-    html_string = ex11
+    html_string = ex16
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "-f":
         filename = args[1]
