@@ -1,5 +1,6 @@
 import tree_builder
 import html_tag
+import sys
 
 
 ex1 = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
@@ -155,20 +156,31 @@ ex11 = """
 <html>
 <head>
   <title>My First HTML</title>
-  <meta charset="UTF-8">
 </head>
 <body>
 
-<p>The HTML head element contains meta data.</p>
+<p>This is paragraph.</p>
 <ul>
 <li>
-ndndsfbs
+List item
 </li>
 </ul>
 </body>
 </html>
 """
-# fill with existing html tags
-html_tag.initialize_tags()
-builder = tree_builder.TreeBuilder(ex11)
-builder.parse()
+
+
+def main():
+    html_string = ex11
+    args = sys.argv[1:]
+    if len(args) == 2 and args[0] == "-f":
+        filename = args[1]
+        with open(filename, 'r') as f:
+            html_string = f.read()
+    html_tag.initialize_tags()
+    builder = tree_builder.TreeBuilder(html_string)
+    builder.parse()
+
+
+if __name__ == "__main__":
+    main()
