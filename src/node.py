@@ -3,7 +3,7 @@ import attributes as atr
 import character_entities as ce
 import util
 import html_tag as ht
-
+import re
 
 PUBLIC_KEY = "PUBLIC"
 SYSTEM_KEY = "SYSTEM"
@@ -69,12 +69,12 @@ class Node(object):
 
     def indent(self, to_indend, depth=0):
         offset = depth * "\t"
-        indeneted = offset + to_indend.replace("\n", "\n" + offset)
+        indeneted = to_indend.replace("\n", "\n" + offset)
         return indeneted
 
     def get_attributes(self):
         attrs = self.attributes.attrs.values()
-        node_html = ""
+        node_html = "\n"
         for attribute in attrs:
             node_html = "{0}\n{1}\nKey: {2}, Value: {3}\n".format(
                 node_html, "Attribute:", attribute.key, attribute.value
@@ -93,7 +93,7 @@ class Comment(Node):
         return "#comment"
 
     def get_html(self, depth=0):
-        return "Comment:\nData: {0}\n".format(self.data)
+        return "\nComment Node:\nData: {0}\n".format(self.data)
 
 
 class Data(Node):
@@ -111,7 +111,7 @@ class Data(Node):
         return "#data"
 
     def get_html(self, depth=0):
-        return "Data:\nData: {0}\n".format(self.attributes.attrs[DATA_KEY])
+        return "\nData Node:\nData: {0}\n".format(self.attributes.attrs[DATA_KEY])
 
 
 class DocumentType(Node):
@@ -130,7 +130,7 @@ class DocumentType(Node):
         return "#documenttype"
 
     def get_html(self, depth=0):
-        node_html = self.name
+        node_html = "\nDocumentType Node: {0}\n".format(self.attributes.attrs["name"])
         keys = []
         if self.attributes.attrs["public_id"]:
             node_html = "{0}\Attribute:\nKey: PUBLIC, Value: {1}\n".format(
@@ -181,13 +181,11 @@ class Text(Node):
         return Text(text)
 
     def get_html(self):
-        node_html = ""
+        node_html = "\n"
         if not SHOW_WHITESPACE_NODE and self.get_normalized() == " ":
             return node_html
-        node_html = "Text:\nData: {0}\n".format(self.text)
+        node_html = "Text Node:\nData: {0}\n".format(self.text)
         return node_html
-
-
 
 
 class Element(Node):
@@ -211,7 +209,7 @@ class Element(Node):
         node.sibling_ind = len(self.children) - 1
 
     def get_html(self, depth=0):
-        node_html = "Element:\nName: {0}\n".format(self.tag.tag_name())
+        node_html = "\nElement Node:\nName: {0}\n".format(self.tag.tag_name)
         node_html = "{0}{1}".format(node_html, self.get_attributes())
         for child in self.children:
             node_html = "{0}{1}".format(node_html, self.indent(child.get_html(), 1))
@@ -230,13 +228,14 @@ class Document(Element):
         super(Document, self).__init__(tag=ht.Tag.value_of("#root"))
         self.force_quirks = QuirksMode.NO_QUIRKS
 
-
     def get_html(self, depth=0):
-        node_html = "Document:\n"
+        node_html = "\nDocument:\n"
         node_html = "{0}{1}".format(node_html, self.get_attributes())
         for child in self.children:
             node_html = "{0}{1}".format(node_html, self.indent(child.get_html(), 1))
+        node_html = re.sub(r'\n\s*\n', '\n\n', node_html)
         return node_html
+
 
 class FormElement(Element):
     def __init__(self, tag, attributes):
@@ -248,7 +247,7 @@ class FormElement(Element):
         return self
 
     def get_html(self, depth=0):
-        node_html = "FormElement:\n"
+        node_html = "\nFormElement Node:\n"
         node_html = "{0}{1}".format(node_html, self.get_attributes())
         for child in self.children:
             node_html = "{0}{1}".format(node_html, self.indent(child.get_html(), 1))

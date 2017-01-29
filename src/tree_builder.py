@@ -40,33 +40,7 @@ class TreeBuilder(object):
             curr_token = None
             if finished:
                 break
-        self.output_elem(self.doc)
-
-    def output_elem(self, elem, depth=0):
-        for child in elem.children:
-            if child.children:
-                try:
-                    print depth * "    " + child.tag.tag_name
-                except:
-                    pass
-                try:
-                    print depth * "    " + child.attributes.attrs.__str__()
-                except:
-                    pass
-                self.output_elem(child, depth=depth+1)
-            else:
-                try:
-                    print depth * "    " + child.tag.tag_name
-                except:
-                    pass
-                try:
-                    print depth * "    " + child.data
-                except:
-                    pass
-                try:
-                    print depth * "    " + child.attributes.attrs.__str__()
-                except:
-                    pass
+        print(self.doc.get_html())
 
     def process_token(self, curr_token, state=None):
         self.current_token = curr_token
