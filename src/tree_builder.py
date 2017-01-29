@@ -14,7 +14,6 @@ class TreeBuilder(object):
         self.reader = util.Reader(input_str)
         self.errors = []
         self.state = ns.INITIAL
-        self.state = ns.INITIAL
         self.head_elem = None
         self.form_elem = None
         self.formatting_elems = []
@@ -40,6 +39,29 @@ class TreeBuilder(object):
             curr_token = None
             if finished:
                 break
+        self.output_elem(self.doc)
+
+    def output_elem(self, elem, depth=0):
+        for child in elem.children:
+            if child.children:
+                try:
+                    print depth * "    " + child.tag.tag_name
+                except:
+                    pass
+                self.output_elem(child, depth=depth + 1)
+            else:
+                try:
+                    print depth * "    " + child.tag.tag_name
+                except:
+                    pass
+                try:
+                    print depth * "    " + child.data
+                except:
+                    pass
+                try:
+                    print depth * "    " + child.attributes.attrs["text"]
+                except:
+                    pass
 
     def process_token(self, curr_token, state=None):
         self.current_token = curr_token
@@ -94,6 +116,7 @@ class TreeBuilder(object):
 
     def insert_node(self, n):
         if not self.stack:
+            print self.doc.tag.tag_name
             self.doc.append_child(n)
         elif self.foster_inserts:
             self.insert_in_foster_parents(n)
@@ -242,7 +265,7 @@ class TreeBuilder(object):
     def push_active_formatting(self, obj):
         count = 0
         elems_size = len(self.formatting_elems)
-        for i in elems_size:
+        for i in range(elems_size):
             pos = elems_size - 1 - i
             elem = self.formatting_elems[pos]
             if not elem:
@@ -299,7 +322,7 @@ class TreeBuilder(object):
 
     def get_active_formatting_el(self, name):
         elems_size = len(self.formatting_elems)
-        for i in elems_size:
+        for i in range(elems_size):
             pos = elems_size - 1 - i
             next_el = self.formatting_elems[pos]
             if not next_el:

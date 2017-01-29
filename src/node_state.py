@@ -501,7 +501,7 @@ class InBodyState(State):
                     tree_builder.generate_implied_end(name)
                     if not tree_builder.current_element().node_name() == name:
                         tree_builder.error("InBodyState")
-                    tree_builder.pop_stack_to_close(["h1", "h2", "h3", "h4", "h5", "h6"])
+                    tree_builder.pop_stack_to_close("h1", "h2", "h3", "h4", "h5", "h6")
             elif name in ["applet", "marquee", "object"]:
                 if not tree_builder.in_scope("name"):
                     if not tree_builder.in_scope(name):

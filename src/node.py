@@ -199,9 +199,6 @@ class Document(Element):
         self.force_quirks = QuirksMode.NO_QUIRKS
         self.location = url
 
-    def append_child(self, node_to_add):
-        pass
-
 
 class FormElement(Element):
     def __init__(self, tag, attributes):
