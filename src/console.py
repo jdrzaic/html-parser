@@ -661,7 +661,7 @@ function drop(ev) {
 
 
 def main():
-    html_string = ex32
+    html_string = ex1
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "-f":
         filename = args[1]

@@ -112,8 +112,7 @@ class Tokeniser(object):
         else:
             name_ref = self.reader.consume_letter_and_digit_seq()
             legit = self.reader.match(';')
-            found = True #(Entities.isBaseNamedEntity(nameRef) | | (Entities.isNamedEntity(nameRef) & & legit));
-
+            found = True
             if not found:
                 self.reader.current_pos = self.reader.mark
                 if legit:
@@ -125,7 +124,7 @@ class Tokeniser(object):
                 return None
             if not self.reader.match_seq_consume(";"):
                 self.errors.append("Missing semicolon")
-            num_chars = 1#Entities.codepointsForName(nameRef, multipointHolder);
+            num_chars = 1
             if num_chars == 1:
                 code_ref[0] = self.multi_point_holder[0]
                 return code_ref
