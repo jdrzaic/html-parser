@@ -3,6 +3,24 @@ import html_tag
 import sys
 
 
+ex0 = """
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My First HTML</title>
+</head>
+<body>
+
+<p>This is paragraph.</p>
+<ul>
+<li>
+List item
+</li>
+</ul>
+</body>
+</html>
+"""
+
 # checked
 ex1 = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 
@@ -661,7 +679,7 @@ function drop(ev) {
 
 
 def main():
-    html_string = ex1
+    html_string = ex0
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "-f":
         filename = args[1]
