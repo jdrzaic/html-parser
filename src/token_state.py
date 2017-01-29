@@ -42,7 +42,7 @@ class CharRefInDataState(State):
 
 class RcDataState(State):
     def read(self, reader, tokeniser):
-        read_c = reader.curr()
+        read_c = reader.current()
         if read_c == "&":
             tokeniser.move_to_state(CHAR_REF_IN_RCDATA)
         elif read_c == "<":
