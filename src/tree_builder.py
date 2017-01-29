@@ -90,7 +90,7 @@ class TreeBuilder(object):
 
     def insert_comment_token(self, comment):
         comm = node.Comment(comment.data)
-        self.insert_node(comment)
+        self.insert_node(comm)
 
     def insert_node(self, n):
         if not self.stack:

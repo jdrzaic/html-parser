@@ -376,7 +376,7 @@ class InBodyState(State):
                         tree_builder.error("InBodyState")
                         tree_builder.remove_from_active_formatting(el)
                         return True
-                    elif tree_builder.in_scope(el.node_name()):
+                    elif not tree_builder.in_scope(el.node_name()):
                         tree_builder.error("InBodyState")
                         return False
                     elif tree_builder.current_element() != el:
@@ -475,7 +475,7 @@ class InBodyState(State):
                         tree_builder.error("InBodyState")
                     tree_builder.remove_from_stack(current_form)
             elif name == "p":
-                if tree_builder.in_button_scope(name):
+                if not tree_builder.in_button_scope(name):
                     tree_builder.error("InBodyState")
                     tree_builder.process_start(name)
                     tree_builder.process_token(token)
@@ -494,7 +494,7 @@ class InBodyState(State):
                         tree_builder.error("InBodyState")
                     tree_builder.pop_stack_to_close(name)
             elif name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
-                if tree_builder.in_scope_list(["h1", "h2", "h3", "h4", "h5", "h6"]):
+                if not tree_builder.in_scope_list(["h1", "h2", "h3", "h4", "h5", "h6"]):
                     tree_builder.error("InBodyState")
                     return False
                 else:
