@@ -3,6 +3,7 @@ import html_tag
 import sys
 
 
+# checked
 ex1 = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
@@ -17,6 +18,7 @@ ex1 = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR
 </body>
 </html>"""
 
+# checked
 ex2 = """
 <!DOCTYPE html>
 <html>
@@ -36,6 +38,7 @@ ex2 = """
 </html>
 """
 
+# checked
 ex3 = """
 <!DOCTYPE html>
 <html>
@@ -49,6 +52,7 @@ ex3 = """
 </html>
 """
 
+# checked
 ex4 = """
 <!DOCTYPE html>
 <html>
@@ -60,6 +64,7 @@ ex4 = """
 </html>
 """
 
+# checked
 ex5 = """
 <!DOCTYPE html>
 <html>
@@ -71,6 +76,7 @@ ex5 = """
 </html>
 """
 
+# checked
 ex6 = """
 <!DOCTYPE html>
 <html>
@@ -86,6 +92,7 @@ Mouse over this paragraph, to display the title attribute as a tooltip.
 </html>
 """
 
+# checked
 ex7 = """
 <!DOCTYPE html>
 <html>
@@ -97,6 +104,7 @@ ex7 = """
 </html>
 """
 
+# checked
 ex8 = """
 <!DOCTYPE html>
 <html>
@@ -115,7 +123,7 @@ ex9 = """
 
 <h1>About W3Schools</h1>
 
-<p title=About W3Schools>
+<p title=About>
 You cannot omit quotes around an attribute value
 if the value contains spaces.
 </p>
@@ -531,7 +539,7 @@ article {
   <p>Standing on the River Thames, London has been a major settlement for two millennia, its history going back to its founding by the Romans, who named it Londinium.</p>
 </article>
 
-<footer>Copyright &copy; W3Schools.com</footer>
+<footer>Copyright copy; W3Schools.com</footer>
 
 </div>
 
@@ -653,7 +661,7 @@ function drop(ev) {
 
 
 def main():
-    html_string = ex1
+    html_string = ex32
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "-f":
         filename = args[1]

@@ -254,6 +254,6 @@ class FormElement(Element):
         node_html = "{0}{1}".format(node_html, self.get_attributes())
         for child in self.children:
             node_html = "{0}{1}".format(node_html, self.indent(child.get_html(), 1))
-        for element in self.elements:
-            node_html = "{0}{1}".format(node_html, self.indent(element.get_html(), 1))
+        # for element in self.elements:
+        #     node_html = "{0}{1}".format(node_html, self.indent(element.get_html(), 1))
         return node_html

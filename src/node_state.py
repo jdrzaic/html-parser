@@ -1047,7 +1047,6 @@ class AfterAfterBodyState(State):
                         token.type == t.TokenType.START_TAG and token.token_name() == "html"):
             return tree_builder.process_token(token, IN_BODY)
         else:
-            tree_builder.error("AfterAfterBodyState")
             tree_builder.move(IN_BODY)
             return tree_builder.process_token(token)
         return True
