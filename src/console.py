@@ -167,5 +167,5 @@ ex11 = """
 """
 # fill with existing html tags
 html_tag.initialize_tags()
-builder = tree_builder.TreeBuilder("www.index.com", ex10)
+builder = tree_builder.TreeBuilder(ex10)
 builder.parse()

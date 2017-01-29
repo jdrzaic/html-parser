@@ -194,10 +194,9 @@ class QuirksMode(object):
 
 class Document(Element):
 
-    def __init__(self, url):
+    def __init__(self):
         super(Document, self).__init__(tag=ht.Tag.value_of("#root"))
         self.force_quirks = QuirksMode.NO_QUIRKS
-        self.location = url
 
 
 class FormElement(Element):

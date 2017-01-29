@@ -9,8 +9,8 @@ import html_tag
 
 
 class TreeBuilder(object):
-    def __init__(self, url, input_str):
-        self.doc = node.Document(url)
+    def __init__(self, input_str):
+        self.doc = node.Document()
         self.reader = util.Reader(input_str)
         self.errors = []
         self.state = ns.INITIAL
@@ -52,7 +52,7 @@ class TreeBuilder(object):
                     print depth * "    " + child.attributes.attrs.__str__()
                 except:
                     pass
-                self.output_elem(child, depth=depth + 1)
+                self.output_elem(child, depth=depth+1)
             else:
                 try:
                     print depth * "    " + child.tag.tag_name
@@ -121,7 +121,6 @@ class TreeBuilder(object):
 
     def insert_node(self, n):
         if not self.stack:
-            print self.doc.tag.tag_name
             self.doc.append_child(n)
         elif self.foster_inserts:
             self.insert_in_foster_parents(n)
@@ -165,9 +164,6 @@ class TreeBuilder(object):
 
     def set_head(self, head):
         self.head_elem = head
-
-    def set_base_url(self, node_el):
-        pass
 
     def frameset(self, ok=False):
         self.frameset_good = ok
