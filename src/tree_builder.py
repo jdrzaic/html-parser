@@ -48,6 +48,10 @@ class TreeBuilder(object):
                     print depth * "    " + child.tag.tag_name
                 except:
                     pass
+                try:
+                    print depth * "    " + child.attributes.attrs.__str__()
+                except:
+                    pass
                 self.output_elem(child, depth=depth + 1)
             else:
                 try:
@@ -59,7 +63,7 @@ class TreeBuilder(object):
                 except:
                     pass
                 try:
-                    print depth * "    " + child.attributes.attrs["text"]
+                    print depth * "    " + child.attributes.attrs.__str__()
                 except:
                     pass
 
@@ -106,7 +110,8 @@ class TreeBuilder(object):
             self.empty_end.name = tag.tag_lc_name
             self.tokeniser.emit(self.empty_end)
             return elem
-        elem = node.Element(tag=html_tag.Tag.value_of(tag.tag_lc_name))
+        elem = node.Element(
+            tag=html_tag.Tag.value_of(tag.tag_lc_name), attributes=tag.attrs)
         self.insert(elem)
         return elem
 
@@ -140,7 +145,7 @@ class TreeBuilder(object):
 
     def insert_empty(self, token):
         a_tag = html_tag.Tag.value_of(token.tag_lc_name)
-        elem = node.Element(tag=a_tag, attributes=token.attributes)
+        elem = node.Element(tag=a_tag, attributes=token.attrs)
         self.insert_node(elem)
         if token.is_self_closing:
             if token.tag_lc_name in html_tag.TAGS:

@@ -119,7 +119,6 @@ class BeforeHeadState(State):
 
 
 class InHeadState(State):
-
     def process_token(self, token, tree_builder):
         if self.is_white(token):
             tree_builder.insert(token)
