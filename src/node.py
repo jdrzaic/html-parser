@@ -54,24 +54,6 @@ class Node(object):
             return False
         self.parent.remove_child(self)
 
-    def add__html_before(self, html):
-        self.add_html_sibling(self.sibling_ind, html)
-
-    def add_node_before(self, node):
-        self.add_node_sibling(self.sibling_ind, node)
-
-    def add_html_after(self, html):
-        self.add_html_sibling(self.sibling_ind + 1, html)
-
-    def add_node_after(self, node):
-        self.add_node_sibling(self.sibling_ind + 1, node)
-
-    def add_html_sibling(self, ind, html):
-        pass
-
-    def add_node_sibling(self, ind, node):
-        pass
-
     def name(self):
         return "#node"
 
