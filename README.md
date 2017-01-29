@@ -1,5 +1,5 @@
 # HTML parser
-Sample usage:
+## Sample usage:
 
 ```python
 html_string = """
