@@ -1,6 +1,6 @@
 # HTML parser
 ## Sample usage:
-### From code:
+### From string:
 ```python
 html_string = """
 <!DOCTYPE html>
