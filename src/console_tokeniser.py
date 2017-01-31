@@ -11,12 +11,10 @@ def main():
         filename = args[1]
         with open(filename, 'r') as f:
             html_string = f.read()
-    r = util.Reader(html_string)
-    t = tokeniser.Tokeniser(r)
+    t = tokeniser.Tokeniser(util.Reader(html_string))
     print(t.tokenise())
     for html in examples.all:
-        r = util.Reader(html)
-        t = tokeniser.Tokeniser(r)
+        t = tokeniser.Tokeniser(util.Reader(html))
         print(t.tokenise())
 
 
