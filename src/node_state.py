@@ -461,7 +461,7 @@ class InBodyState(State):
             elif name == "html":
                 not_ignored = tree_builder.process_end("body")
                 if not_ignored:
-                    return tree_builder.process_end(token)
+                    return tree_builder.process_end(name)
             elif name == "form":
                 current_form = tree_builder.get_form_elem()
                 tree_builder.set_form_elem(None)

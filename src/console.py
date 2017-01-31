@@ -22,19 +22,12 @@ List item
 """
 
 # checked
-ex1 = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-
+ex1 = """
 <html>
-<body>
-
-<h1 key='value' key2>My FirstampHeading</h1>
-<script></script><a href="wwww">fdgdhs</a>
-<div><p class="aaa"></p></div>
-<p key="value" key2=value2>My first paragraph.</p>
-<!-- komentaaar -->
-
-</body>
-</html>"""
+<p>
+</p>
+</html>
+"""
 
 # checked
 ex2 = """
@@ -679,7 +672,7 @@ function drop(ev) {
 
 
 def main():
-    html_string = ex0
+    html_string = ex1
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "-f":
         filename = args[1]
