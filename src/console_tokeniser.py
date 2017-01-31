@@ -14,6 +14,10 @@ def main():
     r = util.Reader(html_string)
     t = tokeniser.Tokeniser(r)
     print(t.tokenise())
+    for html in examples.all:
+        r = util.Reader(html)
+        t = tokeniser.Tokeniser(r)
+        print(t.tokenise())
 
 
 if __name__ == "__main__":

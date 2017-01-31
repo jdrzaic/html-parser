@@ -28,7 +28,7 @@ class Tokeniser(object):
         while True:
             curr_token = self.read()
             normalized = re.sub('\s+|\t+|\n+|\f+|[ ]+', "", curr_token.__str__())
-            tokens = "{0}\nToken: {1}".format(tokens, normalized) if normalized else tokens
+            tokens = "{0}\nToken: {1}".format(tokens, curr_token) if normalized else tokens
             finished = False
             if curr_token.type == t.TokenType.EOF:
                 finished = True
