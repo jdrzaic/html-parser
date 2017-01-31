@@ -14,8 +14,8 @@ def main():
     html_tag.initialize_tags()
     builder = tree_builder.TreeBuilder(html_string)
     builder.parse()
-    for str in examples.all:
-        builder = tree_builder.TreeBuilder(str)
+    for html in examples.all:
+        builder = tree_builder.TreeBuilder(html)
         builder.parse()
 
 
