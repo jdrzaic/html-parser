@@ -1,13 +1,14 @@
 import token_state
 import token as t
 import attributes
+import re
 
 
 class Tokeniser(object):
 
-    def __init__(self, reader, errors):
+    def __init__(self, reader, errors=None):
         self.reader = reader
-        self.errors = errors
+        self.errors = errors or []
         self.state = token_state.DATA
         self.tag_pending = None
         self.comment_pending = t.CommentToken()
@@ -21,6 +22,19 @@ class Tokeniser(object):
         self.chars_string = ''
         self.code_point_holder = []
         self.multi_point_holder = []
+
+    def tokenise(self):
+        tokens = ""
+        while True:
+            curr_token = self.read()
+            normalized = re.sub('\s+|\t+|\n+|\f+|[ ]+', "", curr_token.__str__())
+            tokens = "{0}\nToken: {1}".format(tokens, normalized) if normalized else tokens
+            finished = False
+            if curr_token.type == t.TokenType.EOF:
+                finished = True
+            if finished:
+                break
+        return tokens
 
     def read(self):
         self.self_closing_acknow = True

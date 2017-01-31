@@ -1,8 +1,3 @@
-import tree_builder
-import html_tag
-import sys
-
-
 ex0 = """
 <!DOCTYPE html>
 <html>
@@ -25,6 +20,7 @@ List item
 ex1 = """
 <html>
 <p>
+blah
 </p>
 </html>
 """
@@ -669,19 +665,3 @@ function drop(ev) {
 </body>
 </html>
 """
-
-
-def main():
-    html_string = ex1
-    args = sys.argv[1:]
-    if len(args) == 2 and args[0] == "-f":
-        filename = args[1]
-        with open(filename, 'r') as f:
-            html_string = f.read()
-    html_tag.initialize_tags()
-    builder = tree_builder.TreeBuilder(html_string)
-    builder.parse()
-
-
-if __name__ == "__main__":
-    main()

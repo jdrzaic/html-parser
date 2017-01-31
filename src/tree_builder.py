@@ -19,7 +19,7 @@ class TreeBuilder(object):
         self.formatting_elems = []
         self.original_state = None
         self.stack = []
-        self.tokeniser = tokeniser.Tokeniser(self.reader, self.errors)
+        self.tokeniser = tokeniser.Tokeniser(self.reader)
         self.pending_table_chars = []
         self.empty_end = t.EndTagToken()
         self.frameset_good = False

@@ -144,3 +144,6 @@ class EOFToken(Token):
     def __init__(self):
         super(EOFToken, self).__init__()
         self.type = TokenType.EOF
+
+    def __str__(self):
+        return "EOFToken"
