@@ -12,7 +12,7 @@ ex0 = """
 List item
 </li>
 </ul>
-
+</body>
 </html>
 """
 
@@ -41,7 +41,7 @@ ex2 = """
 <h5>This is heading 5</h5>
 <h6>This is heading 6</h6>
 
-
+</body>
 </html>
 """
 
@@ -55,7 +55,7 @@ ex3 = """
 <p>This is a paragraph.</p>
 <p>This is a paragraph.</p>
 
-
+</body>
 </html>
 """
 
@@ -67,7 +67,7 @@ ex4 = """
 
 <a href="http://www.w3schools.com">This is a link</a>
 
-
+</body>
 </html>
 """
 
@@ -79,7 +79,7 @@ ex5 = """
 
 <img src="w3schools.jpg" alt="W3Schools.com" width="104" height="142">
 
-
+</body>
 </html>
 """
 
@@ -95,7 +95,7 @@ ex6 = """
 Mouse over this paragraph, to display the title attribute as a tooltip.
 </p>
 
-
+</body>
 </html>
 """
 
@@ -107,7 +107,7 @@ ex7 = """
 
 <a href="http://www.w3schools.com">This is a link</a>
 
-
+</body>
 </html>
 """
 
@@ -119,14 +119,14 @@ ex8 = """
 
 <a href=http://www.w3schools.com>This is a link</a>
 
-
+</body>
 </html>
 """
 
 ex9 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <h1>About W3Schools</h1>
 
@@ -140,14 +140,14 @@ If you move the mouse over the paragraph above,
 your browser will only display the first word from the title.
 </b></p>
 
-
+</body>
 </html>
 """
 
 ex10 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <h1>This is heading 1</h1>
 <p>This is some text.</p>
@@ -160,7 +160,7 @@ ex10 = """
 <h2>This is heading 2</h2>
 <p>This is some other text.</p>
 
-
+</body>
 </html>
 """
 
@@ -171,7 +171,7 @@ ex11 = """
 <head>
   <title>My First HTML</title>
 </head>
-
+<body>
 
 <p>This is paragraph.</p>
 <ul>
@@ -179,21 +179,21 @@ ex11 = """
 List item
 </li>
 </ul>
-
+</body>
 </html>
 """
 
 ex12 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <p>I am normal</p>
 <p style="color:red;">I am red</p>
 <p style="color:blue;">I am blue</p>
 <p style="font-size:36px;">I am big</p>
 
-
+</body>
 </html>
 
 """
@@ -206,83 +206,83 @@ ex13 = """
 <h1>This is a heading</h1>
 <p>This is a paragraph.</p>
 
-
+</body>
 </html>
 """
 
 ex14 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <h1 style="text-align:center;">Centered Heading</h1>
 <p style="text-align:center;">Centered paragraph.</p>
 
-
+</body>
 </html>
 """
 
 ex15 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <p>This text is normal.</p>
 
 <p><b>This text is bold.</b>gshadhwhr<b>hsfhswhahd</b></p>
 
-
+</body>
 </html>
 """
 
 ex16 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <p>This text is normal.</p>
 
 <p><em>This text is emphasized.</em></p>
 <p><b>This text is bold.</b>gshadhwhr<b>hsfhswhahd</b></p>
 
-
+</body>
 </html>
 """
 
 ex17 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <p>This is <sup>superscripted</sup> text.</p>
 
-
+</body>
 </html>
 """
 
 ex18 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <p>The <abbr title="World Health Organization">WHO</abbr> was founded in 1948.</p>
 
 <p>Marking up abbreviations can give useful information to browsers, translation systems and search-engines.</p>
 
-
+</body>
 </html>
 """
 
 ex19 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <!-- This is a comment -->
 <p>This is a paragraph.</p>
 <!-- Comments are not displayed in the browser -->
 
-
+</body>
 </html>
 """
 
@@ -296,43 +296,43 @@ h1   {color: blue;}
 p    {color: red;}
 </style>
 </head>
-
+<body>
 
 <h1>This is a heading</h1>
 <p>This is a paragraph.</p>
 
-
+</body>
 </html>
 """
 
 ex21 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <p><a href="html_images.asp">HTML Images</a> is a link to a page on this website.</p>
 
 <p><a href="http://www.w3.org/">W3C</a> is a link to a website on the World Wide Web.</p>
 
-
+</body>
 </html>
 """
 
 ex22 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <img src="html5.gif" alt="HTML5 Icon" width="128" height="128">
 
-
+</body>
 </html>
 """
 
 ex23 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <h2>HTML Tables</h2>
 
@@ -381,7 +381,7 @@ ex23 = """
 
 <hr>
 
-
+</body>
 </html>
 """
 
@@ -399,7 +399,7 @@ th, td {
 }
 </style>
 </head>
-
+<body>
 
 <table style="width:100%">
   <tr>
@@ -424,14 +424,14 @@ th, td {
   </tr>
 </table>
 
-
+</body>
 </html>
 """
 
 ex25 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <h2>An ordered HTML list</h2>
 
@@ -441,14 +441,14 @@ ex25 = """
   <li>Milk</li>
 </ol>
 
-
+</body>
 </html>
 """
 
 ex26 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <h2>A Nested List</h2>
 
@@ -463,14 +463,14 @@ ex26 = """
   <li>Milk</li>
 </ul>
 
-
+</body>
 </html>
 """
 
 ex27 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <div style="background-color:black;color:white;padding:20px;">
   <h2>London</h2>
@@ -478,7 +478,7 @@ ex27 = """
   <p>Standing on the River Thames, London has been a major settlement for two millennia, its history going back to its founding by the Romans, who named it Londinium.</p>
 </div>
 
-
+</body>
 </html>
 """
 
@@ -524,7 +524,7 @@ article {
 }
 </style>
 </head>
-
+<body>
 
 <div class="container">
 
@@ -550,18 +550,18 @@ article {
 
 </div>
 
-
+</body>
 </html>
 """
 
 ex29 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <iframe src="demo_iframe.htm"></iframe>
 
-
+</body>
 </html>
 """
 
@@ -576,7 +576,7 @@ ex30 = """
 ex31 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <p id="demo"></p>
 
@@ -584,14 +584,14 @@ ex31 = """
 document.getElementById("demo").innerHTML = "Hello JavaScript!";
 </script>
 
-
+</body>
 </html>
 """
 
 ex32 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <form>
   <input type="radio" name="gender" value="male" checked> Male<br>
@@ -600,14 +600,14 @@ ex32 = """
 </form>
 <p>After form</p>
 
-
+</body>
 </html>
 """
 
 ex33 = """
 <!DOCTYPE html>
 <html>
-
+<body>
 
 <p>
 Depending on browser support:<br>
@@ -622,7 +622,7 @@ A date picker can pop-up when you enter the input field.
 
 <p><strong>Note:</strong> type="month" is not supported in Firefox, or Internet Explorer 11 and earlier versions.</p>
 
-
+</body>
 </html>
 """
 
@@ -654,7 +654,7 @@ function drop(ev) {
 }
 </script>
 </head>
-
+<body>
 
 <p>Drag the W3Schools image into the rectangle:</p>
 
@@ -662,9 +662,10 @@ function drop(ev) {
 <br>
 <img id="drag1" src="img_logo.gif" draggable="true" ondragstart="drag(event)" width="336" height="69">
 
-
+</body>
 </html>
 """
+
 
 all = [ex0, ex1, ex2, ex3, ex4, ex5, ex6, ex7, ex8, ex9, ex10, ex11, ex12, ex13, ex14, ex15, ex16,
        ex17, ex18, ex19, ex20, ex21, ex22, ex23, ex24, ex25, ex26, ex27, ex28, ex29, ex30, ex31,

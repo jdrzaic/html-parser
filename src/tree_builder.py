@@ -134,7 +134,6 @@ class TreeBuilder(object):
         self.state = state
 
     def error(self, token):
-        print("error in state: {0}".format(token))
         self.errors.append(token)
 
     def set_head(self, head):
