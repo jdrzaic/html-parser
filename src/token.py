@@ -39,7 +39,7 @@ class DoctypeToken(Token):
     def __str__(self):
         doc_str = "<!DOCTYPE " + "PUBLIC \"{0}\"".format(self.public_identifier) if self.public_identifier else ""
         doc_str += " SYSTEM \"{0}\"".format(self.system_identifier) if self.system_identifier else ""
-        return doc_str + ">"
+        return doc_str + ">" if doc_str else ""
 
 
 class TagToken(Token):

@@ -307,7 +307,7 @@ class AttrNameState(State):
 class AfterAttrNameState(State):
     def read(self, reader, tokeniser):
         read_c = reader.consume()
-        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f'or read_c == " ":
+        if read_c == '\t' or read_c == '\n' or read_c == '\r' or read_c == '\f' or read_c == " ":
             return
         elif read_c == "/":
             tokeniser.move(SELF_CLOSING_START_TAG)
