@@ -5,7 +5,7 @@ import examples
 
 
 def main():
-    html_string = examples.ex1
+    html_string = examples.ex35
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "-f":
         filename = args[1]
@@ -14,9 +14,9 @@ def main():
     html_tag.initialize_tags()
     builder = tree_builder.TreeBuilder(html_string)
     builder.parse()
-    for html in examples.all:
-        builder = tree_builder.TreeBuilder(html)
-        builder.parse()
+    #for html in examples.all:
+    #    builder = tree_builder.TreeBuilder(html)
+    #    builder.parse()
 
 
 if __name__ == "__main__":

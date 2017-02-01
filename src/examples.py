@@ -666,6 +666,17 @@ function drop(ev) {
 </html>
 """
 
+ex35 = """
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My First HTML</title>
+</head>
+<body>
+<div><div>in second</div>in first<p>in paragraph <b>bolded</b></p><form><input type="button"></form></div>
+</body>
+</html>
+"""
 
 all = [ex0, ex1, ex2, ex3, ex4, ex5, ex6, ex7, ex8, ex9, ex10, ex11, ex12, ex13, ex14, ex15, ex16,
        ex17, ex18, ex19, ex20, ex21, ex22, ex23, ex24, ex25, ex26, ex27, ex28, ex29, ex30, ex31,
